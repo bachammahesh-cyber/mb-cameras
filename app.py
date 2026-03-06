@@ -28,8 +28,6 @@ def init_db():
     conn = get_db()
     cursor = conn.cursor()
 
-    # USERS
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,8 +36,6 @@ def init_db():
         role TEXT
     )
     """)
-
-    # INVENTORY
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS items(
@@ -50,8 +46,6 @@ def init_db():
         status TEXT
     )
     """)
-
-    # RENTALS (JOB LEVEL)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS rentals(
@@ -67,8 +61,6 @@ def init_db():
     )
     """)
 
-    # INTERNAL ITEMS
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS rental_items(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -80,8 +72,6 @@ def init_db():
         status TEXT
     )
     """)
-
-    # OUTSIDE VENDOR ITEMS
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS outside_items(
@@ -197,7 +187,7 @@ def logout():
 
 
 # -----------------------
-# Inventory page
+# Inventory
 # -----------------------
 
 @app.route("/inventory")
@@ -222,7 +212,7 @@ def inventory():
 
 
 # -----------------------
-# Add inventory item
+# Add item
 # -----------------------
 
 @app.route("/add_item", methods=["POST"])
@@ -249,7 +239,7 @@ def add_item():
 
 
 # -----------------------
-# New rental page
+# New rental
 # -----------------------
 
 @app.route("/new_rental")
@@ -340,28 +330,14 @@ def save_rental():
             item_id,
             item["rent_per_day"],
             days,
-            item_total
+            item_total,
+            "Active"
         ))
 
         conn.execute(
             "UPDATE items SET status='Rented' WHERE id=?",
             (item_id,)
         )
-       
-        conn.execute("""
-        INSERT INTO rental_items
-        (rental_id,item_id,rate_per_day,days,total,status)
-        VALUES(?,?,?,?,?,?)
-        """, (
-            rental_id,
-            item_id,
-            item["rent_per_day"],
-            days,
-            item_total,
-            "Active"
-        ))
-
-
 
     # OUTSIDE ITEMS
 
@@ -402,6 +378,11 @@ def save_rental():
     conn.close()
 
     return redirect("/dashboard")
+
+
+# -----------------------
+# Return item
+# -----------------------
 
 @app.route("/return_item/<int:id>")
 def return_item(id):
