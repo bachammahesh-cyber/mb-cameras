@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>New Rental - MB_Cameras</title>
+
+<link rel="stylesheet" href="/static/style.css">
+
+<style>
+
+.section{
+margin-bottom:25px;
+}
+
+.vendorBlock{
+border:1px solid #444;
+padding:10px;
+margin-top:10px;
+}
+
+.itemRow{
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🎥 New Rental Entry</h2>
+
+<a href="/dashboard">← Back</a>
+
+<br><br>
+
+<form method="POST" action="/save_rental">
+
+
+<!-- CUSTOMER DETAILS -->
+
+<div class="section">
+
+<input type="text" name="customer_name" placeholder="Customer Name" required>
+
+<input type="text" name="phone" placeholder="Phone Number" required>
+
+<label>Start Date</label>
+<input type="date" name="start_date" required>
+
+<label>End Date</label>
+<input type="date" name="end_date" required>
+
+</div>
+
+
+<hr>
+
+
+<!-- YOUR EQUIPMENT -->
+
+<div class="section">
+
+<h3>Your Equipment</h3>
+
+{% for item in items %}
+
+<label style="display:block;margin-bottom:6px;">
+
+<input type="checkbox"
+name="item_ids"
+value="{{ item['id'] }}"
+data-status="{{ item['status'] }}"
+onchange="checkStatus(this)">
+
+{{ item['name'] }}
+
+<span style="color:gray;">
+({{ item['status'] }})
+</span>
+
+</label>
+
+{% endfor %}
+
+</div>
+
+
+<hr>
+
+
+<!-- OUTSIDE EQUIPMENT -->
+
+<div class="section">
+
+<h3>Outside Equipment</h3>
+
+<button type="button" onclick="addVendor()">
+➕ Add Vendor
+</button>
+
+<div id="outsideContainer"></div>
+
+
+<!-- HIDDEN TEMPLATE -->
+
+<div id="vendorTemplate" style="display:none;">
+
+<div class="vendorBlock">
+
+<input type="text" name="vendor_name[]" placeholder="Vendor Name">
+
+<div style="margin-top:10px;">
+
+{% for item in items %}
+
+<div class="itemRow">
+
+<input type="checkbox"
+name="vendor_item_ids[]"
+value="{{ item['id'] }}">
+
+<label style="width:200px;">
+{{ item['name'] }}
+</label>
+
+<input type="number"
+name="vendor_rates[]"
+placeholder="Rate"
+style="width:100px;">
+
+</div>
+
+{% endfor %}
+
+</div>
+
+<button type="button" onclick="removeVendor(this)">
+❌ Remove Vendor
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<hr>
+
+
+<!-- PAYMENT -->
+
+<input type="number"
+name="advance_paid"
+placeholder="Advance Paid"
+required>
+
+
+<br><br>
+
+<button type="submit">
+Confirm Rental
+</button>
+
+</form>
+
+</div>
+
+
+<script>
+
+function checkStatus(box){
+
+const status = box.dataset.status;
+
+if(status === "Rented" && box.checked){
+
+alert("⚠ This equipment is currently marked as Rented in inventory.\n\nMake sure it will be available before confirming rental.");
+
+}
+
+}
+
+
+function addVendor(){
+
+const template = document.getElementById("vendorTemplate");
+
+const clone = template.firstElementChild.cloneNode(true);
+
+document.getElementById("outsideContainer").appendChild(clone);
+
+}
+
+
+function removeVendor(btn){
+
+btn.parentElement.remove();
+
+}
+
+</script>
+
+
+</body>
+</html>

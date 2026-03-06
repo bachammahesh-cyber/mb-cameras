@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Vendor Dues</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Due to Vendors</h2>
+
+<a href="/dashboard">← Back</a>
+
+<br><br>
+
+{% for v in vendors %}
+
+<div style="border-bottom:1px solid #444;padding:10px;">
+
+<strong>{{ v["vendor_name"] }}</strong><br>
+
+Equipment: {{ v["item_name"] }}<br>
+
+Total: ₹{{ v["total"] }}<br>
+
+Paid: ₹{{ v["paid"] }}<br>
+
+Balance: ₹{{ v["balance"] }}<br>
+
+{% if v["balance"] > 0 %}
+
+<form method="POST" action="/pay_vendor/{{ v['id'] }}">
+
+<input type="number" name="payment" placeholder="Payment">
+
+<button type="submit">Pay</button>
+
+</form>
+
+{% else %}
+
+✅ Fully Paid
+
+{% endif %}
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</body>
+</html>

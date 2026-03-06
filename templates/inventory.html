@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory - MB_Cameras</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>📦 Inventory</h2>
+
+    <a href="/dashboard">← Back to Dashboard</a>
+    <br><br>
+
+    {% if role == "owner" %}
+    <h3>Add New Item</h3>
+    <form method="POST" action="/add_item">
+        <input type="text" name="name" placeholder="Item Name" required>
+        <input type="text" name="category" placeholder="Category" required>
+        <input type="number" name="rent" placeholder="Rent Per Day" required>
+        <select name="status">
+            <option>Available</option>
+            <option>Rented</option>
+            <option>Maintenance</option>
+        </select>
+        <button type="submit">Add Item</button>
+    </form>
+    {% endif %}
+
+    <hr>
+
+    <h3>All Items</h3>
+
+    {% for item in items %}
+        <p>
+            {{ item["name"] }} |
+            {{ item["category"] }} |
+            ₹{{ item["rent_per_day"] }} |
+            {{ item["status"] }}
+
+            {% if role == "owner" %}
+                <a href="/delete_item/{{ item['id'] }}">❌</a>
+            {% endif %}
+        </p>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>
