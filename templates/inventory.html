@@ -41,27 +41,33 @@
 
 <h2>Inventory List</h2>
 
-<table>
+<table class="records-table">
 
+<thead>
 <tr>
 <th>ID</th>
 <th>Name</th>
 <th>Category</th>
-<th>Rent/Day</th>
+<th>Rent / Day</th>
 <th>Status</th>
 </tr>
+</thead>
+
+<tbody>
 
 {% for item in items %}
 
 <tr>
-<td>{{item.id}}</td>
-<td>{{item.name}}</td>
-<td>{{item.category}}</td>
-<td>₹{{item.rent_per_day}}</td>
-<td>{{item.status}}</td>
+<td>{{ item.id }}</td>
+<td>{{ item.name }}</td>
+<td>{{ item.category }}</td>
+<td>₹{{ item.rent_per_day }}</td>
+<td>{{ item.status }}</td>
 </tr>
 
 {% endfor %}
+
+</tbody>
 
 </table>
 
