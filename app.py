@@ -1,16 +1,11 @@
-from flask import Flask, render_template, request, redirect, session, send_from_directory
+from flask import Flask, render_template, request, redirect, session
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 
-
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__)
 app.secret_key = "super_secret_key_change_this"
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    return send_from_directory('static', filename)
 
 DATABASE = "database.db"
 
@@ -23,15 +18,6 @@ def get_db():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
-
-
-# -----------------------
-# Static files fix (Render)
-# -----------------------
-
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    return send_from_directory('static', filename)
 
 
 # -----------------------
@@ -321,8 +307,6 @@ def save_rental():
 
     total_amount = 0
 
-    # INTERNAL ITEMS
-
     item_ids = request.form.getlist("item_ids")
 
     for item_id in item_ids:
@@ -354,33 +338,6 @@ def save_rental():
             (item_id,)
         )
 
-    # OUTSIDE ITEMS
-
-    vendor_names = request.form.getlist("vendor_name[]")
-    vendor_rates = request.form.getlist("vendor_rates[]")
-
-    for i in range(len(vendor_names)):
-
-        if vendor_names[i] and vendor_rates[i]:
-
-            vendor_total = days * float(vendor_rates[i])
-
-            conn.execute("""
-            INSERT INTO outside_items
-            (rental_id,vendor_name,item_name,rate_per_day,
-            days,total,paid,balance)
-            VALUES(?,?,?,?,?,?,?,?)
-            """, (
-                rental_id,
-                vendor_names[i],
-                "Vendor Equipment",
-                vendor_rates[i],
-                days,
-                vendor_total,
-                0,
-                vendor_total
-            ))
-
     balance = total_amount - advance_paid
 
     conn.execute("""
@@ -393,38 +350,6 @@ def save_rental():
     conn.close()
 
     return redirect("/dashboard")
-
-
-# -----------------------
-# Return item
-# -----------------------
-
-@app.route("/return_item/<int:id>")
-def return_item(id):
-
-    conn = get_db()
-
-    item = conn.execute(
-        "SELECT * FROM rental_items WHERE id=?",
-        (id,)
-    ).fetchone()
-
-    conn.execute("""
-    UPDATE rental_items
-    SET status='Returned'
-    WHERE id=?
-    """,(id,))
-
-    conn.execute("""
-    UPDATE items
-    SET status='Available'
-    WHERE id=?
-    """,(item["item_id"],))
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/rental_records")
 
 
 # -----------------------
@@ -463,15 +388,13 @@ def credit_report():
 
     conn = get_db()
 
-    rentals = conn.execute("""
-    SELECT * FROM rentals
-    ORDER BY id DESC
-    """).fetchall()
+    rentals = conn.execute(
+        "SELECT * FROM rentals ORDER BY id DESC"
+    ).fetchall()
 
-    vendors = conn.execute("""
-    SELECT * FROM outside_items
-    ORDER BY id DESC
-    """).fetchall()
+    vendors = conn.execute(
+        "SELECT * FROM outside_items ORDER BY id DESC"
+    ).fetchall()
 
     conn.close()
 
@@ -483,70 +406,10 @@ def credit_report():
 
 
 # -----------------------
-# Customer payment
-# -----------------------
-
-@app.route("/add_payment/<int:id>", methods=["POST"])
-def add_payment(id):
-
-    payment = float(request.form["payment"])
-
-    conn = get_db()
-
-    rental = conn.execute(
-        "SELECT * FROM rentals WHERE id=?",
-        (id,)
-    ).fetchone()
-
-    new_paid = rental["advance_paid"] + payment
-    new_balance = rental["total_amount"] - new_paid
-
-    conn.execute("""
-    UPDATE rentals
-    SET advance_paid=?, balance=?
-    WHERE id=?
-    """, (new_paid, new_balance, id))
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/credit_report")
-
-
-# -----------------------
-# Vendor payment
-# -----------------------
-
-@app.route("/pay_vendor/<int:id>", methods=["POST"])
-def pay_vendor(id):
-
-    payment = float(request.form["payment"])
-
-    conn = get_db()
-
-    vendor = conn.execute(
-        "SELECT * FROM outside_items WHERE id=?",
-        (id,)
-    ).fetchone()
-
-    new_paid = vendor["paid"] + payment
-    new_balance = vendor["total"] - new_paid
-
-    conn.execute("""
-    UPDATE outside_items
-    SET paid=?, balance=?
-    WHERE id=?
-    """, (new_paid, new_balance, id))
-
-    conn.commit()
-    conn.close()
-
-    return redirect("/credit_report")
-
-
-# -----------------------
 # Run app
 # -----------------------
 
 if __name__ == "__main__":
-    app.run(debug=True)
+
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
