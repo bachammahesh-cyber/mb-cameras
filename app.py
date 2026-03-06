@@ -1,7 +1,9 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, send_from_directory
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import os
+
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key_change_this"
@@ -17,6 +19,15 @@ def get_db():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+# -----------------------
+# Static files fix (Render)
+# -----------------------
+
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
 
 
 # -----------------------
@@ -533,8 +544,11 @@ def pay_vendor(id):
 # Run app
 # -----------------------
 
-import os
-
 if __name__ == "__main__":
+
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
