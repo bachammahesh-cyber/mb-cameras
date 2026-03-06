@@ -6,6 +6,7 @@ margin:0;
 
 }
 
+
 .header{
 
 display:flex;
@@ -17,6 +18,7 @@ border-bottom:1px solid #eee;
 
 }
 
+
 .container{
 
 max-width:1100px;
@@ -24,6 +26,7 @@ margin:auto;
 padding:30px;
 
 }
+
 
 .card{
 
@@ -35,11 +38,13 @@ box-shadow:0 2px 6px rgba(0,0,0,0.05);
 
 }
 
+
 .center{
 
 text-align:center;
 
 }
+
 
 label{
 
@@ -48,6 +53,7 @@ margin-top:10px;
 font-weight:500;
 
 }
+
 
 input{
 
@@ -58,6 +64,7 @@ border-radius:6px;
 border:1px solid #ddd;
 
 }
+
 
 button{
 
@@ -71,13 +78,16 @@ cursor:pointer;
 
 }
 
+
 button:hover{
 
 background:#1a68d1;
 
 }
 
-/* Equipment grid */
+
+/* Equipment Grid */
+
 
 .equipment-grid{
 
@@ -88,29 +98,55 @@ margin-top:15px;
 
 }
 
+
 .equipment-card{
 
 display:flex;
 align-items:center;
-gap:10px;
-padding:12px;
+gap:12px;
+padding:15px;
 background:#f9f9f9;
 border:1px solid #eee;
 border-radius:8px;
+cursor:pointer;
 
 }
 
-.equipment-name{
+
+.equipment-card input[type="checkbox"]{
+
+width:18px;
+height:18px;
+
+}
+
+
+.equipment-info{
 
 flex:1;
-font-size:14px;
-font-weight:500;
 
 }
+
+
+.equipment-title{
+
+font-weight:600;
+font-size:14px;
+
+}
+
+
+.equipment-price{
+
+font-size:12px;
+color:#777;
+
+}
+
 
 .vendor-price{
 
 width:90px;
-display:none;
+margin-left:10px;
 
 }
