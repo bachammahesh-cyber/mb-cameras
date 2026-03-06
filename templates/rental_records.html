@@ -1,34 +1,57 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Rental Records - MB_Cameras</title>
-    <link rel="stylesheet" href="/static/style.css">
+<title>Rental Records</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
+<div class="header">
+<h2>Rental Records</h2>
+<a class="logout" href="/dashboard">Dashboard</a>
+</div>
+
 <div class="container">
-    <h2>📊 Rental Records</h2>
 
-    <a href="/dashboard">← Back</a>
-    <br><br>
+<div class="box">
 
-    {% for rental in rentals %}
-        <div style="border-bottom:1px solid #444; padding:10px;">
-            <strong>{{ rental["item_name"] }}</strong><br>
-            Customer: {{ rental["customer_name"] }}<br>
-            Phone: {{ rental["phone"] }}<br>
-            {{ rental["start_date"] }} → {{ rental["end_date"] }}<br>
-            ₹{{ rental["total_amount"] }}<br>
-            Status: {{ rental["status"] }}
+<h2>All Rentals</h2>
 
-            {% if rental["status"] == "Active" %}
-                <br>
-                <a href="/return_rental/{{ rental['id'] }}">
-                    ✅ Mark as Returned
-                </a>
-            {% endif %}
-        </div>
-    {% endfor %}
+<table>
+
+<tr>
+<th>ID</th>
+<th>Customer</th>
+<th>Phone</th>
+<th>Start</th>
+<th>End</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Balance</th>
+<th>Status</th>
+</tr>
+
+{% for r in rentals %}
+
+<tr>
+<td>{{r.id}}</td>
+<td>{{r.customer_name}}</td>
+<td>{{r.phone}}</td>
+<td>{{r.start_date}}</td>
+<td>{{r.end_date}}</td>
+<td>₹{{r.total_amount}}</td>
+<td>₹{{r.advance_paid}}</td>
+<td>₹{{r.balance}}</td>
+<td>{{r.status}}</td>
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
 
 </div>
 
