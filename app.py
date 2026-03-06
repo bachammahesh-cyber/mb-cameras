@@ -8,6 +8,10 @@ import os
 app = Flask(__name__, static_folder="static")
 app.secret_key = "super_secret_key_change_this"
 
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
+
 DATABASE = "database.db"
 
 
