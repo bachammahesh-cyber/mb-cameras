@@ -53,10 +53,9 @@
 
 <input type="checkbox" name="item_ids" value="{{item.id}}">
 
-<div class="equipment-info">
-<div class="equipment-name">{{item.name}}</div>
-<div class="equipment-price">₹{{item.rent_per_day}} / day</div>
-</div>
+<span class="equipment-name">
+{{item.name}} (₹{{item.rent_per_day}} / day)
+</span>
 
 </label>
 
@@ -65,7 +64,6 @@
 </div>
 
 </div>
-
 
 
 <div class="card">
@@ -86,16 +84,16 @@ name="outside_item_ids"
 value="{{item.id}}"
 onclick="togglePrice('{{item.id}}')">
 
-<div class="equipment-info">
-<div class="equipment-name">{{item.name}}</div>
-</div>
+<span class="equipment-name">
+{{item.name}}
+</span>
 
 <input
 type="number"
 step="0.01"
 name="vendor_price_{{item.id}}"
 id="price_{{item.id}}"
-placeholder="Vendor price"
+placeholder="₹"
 class="vendor-price"
 >
 
@@ -123,12 +121,12 @@ class="vendor-price"
 
 function togglePrice(id){
 
-let field = document.getElementById("price_"+id)
+let field=document.getElementById("price_"+id)
 
-if(field.style.display === "none" || field.style.display === ""){
-field.style.display = "block"
+if(field.style.display==="none" || field.style.display===""){
+field.style.display="block"
 }else{
-field.style.display = "none"
+field.style.display="none"
 }
 
 }
