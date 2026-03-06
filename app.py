@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 app.secret_key = "super_secret_key_change_this"
 
 DATABASE = "database.db"
