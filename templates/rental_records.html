@@ -39,8 +39,8 @@
 <td>{{r.id}}</td>
 <td>{{r.customer_name}}</td>
 <td>{{r.phone}}</td>
-<td>{{r.start_date}}</td>
-<td>{{r.end_date}}</td>
+<td>{{r.start_date[8:10]}}/{{r.start_date[5:7]}}/{{r.start_date[2:4]}}</td>
+<td>{{r.end_date[8:10]}}/{{r.end_date[5:7]}}/{{r.end_date[2:4]}}</td>
 <td>₹{{r.total_amount}}</td>
 <td>₹{{r.advance_paid}}</td>
 <td>₹{{r.balance}}</td>
