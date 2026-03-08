@@ -24,6 +24,8 @@ HEADER
 display:flex;
 justify-content:space-between;
 align-items:center;
+gap:12px;
+flex-wrap:wrap;
 padding:20px 30px;
 background:white;
 border-bottom:1px solid #eee;
@@ -38,6 +40,11 @@ font-size:22px;
 text-decoration:none;
 color:#444;
 font-size:14px;
+}
+
+.header a{
+text-decoration:none;
+font-weight:600;
 }
 
 /* ------------------------
@@ -123,6 +130,7 @@ CONTAINER
 max-width:1100px;
 margin:auto;
 padding:30px;
+box-sizing:border-box;
 }
 
 /* ------------------------
@@ -160,6 +168,7 @@ margin-top:6px;
 border-radius:6px;
 border:1px solid #ddd;
 font-size:14px;
+box-sizing:border-box;
 }
 
 /* ------------------------
@@ -174,6 +183,7 @@ border:none;
 border-radius:6px;
 font-size:15px;
 cursor:pointer;
+min-height:42px;
 }
 
 button:hover{
@@ -256,6 +266,17 @@ background:white;
 border:1px solid #e5e7eb;
 border-radius:8px;
 overflow:hidden;
+}
+
+.records-table form{
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.records-table form input{
+margin-top:0;
+min-width:90px;
 }
 
 .records-table thead{
@@ -346,6 +367,20 @@ MOBILE RESPONSIVE
 
 @media(max-width:800px){
 
+.container{
+padding:16px;
+}
+
+.card,
+.box{
+padding:16px;
+margin-bottom:16px;
+}
+
+.header{
+padding:14px 16px;
+}
+
 .brand-band{
 padding:16px 14px;
 }
@@ -378,6 +413,58 @@ font-size:20px;
 
 .equipment-grid{
 grid-template-columns:1fr;
+}
+
+.equipment-card{
+flex-direction:column;
+align-items:flex-start;
+}
+
+.vendor-price{
+width:100%;
+}
+
+.records-table{
+display:block;
+overflow-x:auto;
+white-space:nowrap;
+}
+
+.records-table th,
+.records-table td{
+padding:10px 12px;
+}
+
+.records-table form{
+flex-direction:column;
+align-items:stretch;
+min-width:110px;
+}
+
+.records-table form button{
+width:100%;
+}
+
+}
+
+@media(max-width:560px){
+
+.brand-band{
+justify-content:flex-start;
+padding-bottom:52px;
+}
+
+.brand-band .brand-title{
+font-size:20px;
+letter-spacing:0.06em;
+}
+
+.brand-band a,
+.brand-band .logout{
+top:auto;
+bottom:12px;
+right:12px;
+transform:none;
 }
 
 }
