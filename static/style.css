@@ -86,6 +86,11 @@ text-transform:uppercase;
 text-shadow:0 6px 20px rgba(0,0,0,0.45);
 }
 
+.brand-home{
+text-decoration:none;
+color:inherit;
+}
+
 .brand-band .brand-title::after{
 content:"";
 width:34px;
@@ -99,8 +104,7 @@ box-shadow:
 0 4px 16px rgba(15,23,42,0.5);
 }
 
-.brand-band a,
-.brand-band .logout{
+.brand-band .header-action{
 position:absolute;
 right:30px;
 top:50%;
@@ -117,8 +121,43 @@ background:rgba(15,23,42,0.28);
 backdrop-filter:blur(4px);
 }
 
-.brand-band a:hover,
-.brand-band .logout:hover{
+.brand-band .header-action:hover{
+background:rgba(15,23,42,0.45);
+}
+
+.with-logout-band{
+padding-bottom:84px;
+}
+
+.bottom-logout-band{
+position:fixed;
+left:0;
+right:0;
+bottom:0;
+z-index:20;
+padding:12px 16px;
+background:linear-gradient(120deg,#0f172a 0%,#0b3f6f 45%,#0f766e 100%);
+box-shadow:0 -6px 20px rgba(2,12,27,0.22);
+display:flex;
+justify-content:center;
+}
+
+.bottom-logout-band a{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+min-width:180px;
+padding:10px 18px;
+border-radius:999px;
+text-decoration:none;
+font-weight:700;
+font-size:14px;
+color:#f8fafc;
+border:1px solid rgba(248,250,252,0.45);
+background:rgba(15,23,42,0.28);
+}
+
+.bottom-logout-band a:hover{
 background:rgba(15,23,42,0.45);
 }
 
@@ -396,8 +435,7 @@ width:26px;
 height:26px;
 }
 
-.brand-band a,
-.brand-band .logout{
+.brand-band .header-action{
 right:14px;
 padding:6px 10px;
 font-size:12px;
@@ -461,8 +499,7 @@ width:100%;
 justify-content:center;
 }
 
-.brand-band a,
-.brand-band .logout{
+.brand-band .header-action{
 top:auto;
 bottom:12px;
 right:12px;

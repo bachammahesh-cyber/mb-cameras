@@ -7,7 +7,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="with-logout-band">
+
+<div class="header brand-band">
+<h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
 
 <div class="header">
 <h2>Financials</h2>
@@ -136,6 +140,10 @@
 
 </div>
 
+</div>
+
+<div class="bottom-logout-band">
+<a href="/logout">Logout</a>
 </div>
 
 </body>
