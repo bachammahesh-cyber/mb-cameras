@@ -8,6 +8,7 @@ app = Flask(__name__)
 app.secret_key = "super_secret_key_change_this"
 
 DATABASE = "database.db"
+DB_READY = False
 
 
 # -----------------------
@@ -92,13 +93,6 @@ def init_db():
     conn.close()
 
 
-init_db()
-
-
-# -----------------------
-# Create owner
-# -----------------------
-
 def create_owner():
 
     conn = get_db()
@@ -122,7 +116,18 @@ def create_owner():
     conn.close()
 
 
-create_owner()
+def ensure_db_ready():
+    global DB_READY
+    if DB_READY:
+        return
+    init_db()
+    create_owner()
+    DB_READY = True
+
+
+@app.before_request
+def bootstrap_db():
+    ensure_db_ready()
 
 
 # -----------------------
