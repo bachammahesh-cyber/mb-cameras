@@ -415,7 +415,11 @@ def toggle_rental_status(rental_id):
         if not rental:
             return redirect("/rental_records")
 
-        new_status = "Returned" if rental["status"] == "Active" else "Active"
+        # One-way transition: once returned, keep it returned.
+        if rental["status"] != "Active":
+            return redirect("/rental_records")
+
+        new_status = "Returned"
 
         conn.execute(
             "UPDATE rentals SET status=? WHERE id=?",
@@ -431,7 +435,7 @@ def toggle_rental_status(rental_id):
             conn.execute(
                 "UPDATE items SET status=? WHERE id=?",
                 (
-                    "Available" if new_status == "Returned" else "Rented",
+                    "Available",
                     row["item_id"]
                 )
             )

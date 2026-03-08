@@ -354,6 +354,10 @@ color:#0b5fae;
 color:#0f766e;
 }
 
+.status-toggle.is-static{
+cursor:default;
+}
+
 .records-table thead{
 background:#f8fafc;
 }

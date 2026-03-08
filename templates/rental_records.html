@@ -58,6 +58,7 @@
 <td>₹{{ r.advance_paid }}</td>
 <td>₹{{ r.balance }}</td>
 <td>
+{% if r.status == 'Active' %}
 <form method="POST" action="/toggle_rental_status/{{ r.id }}">
 <button
 type="submit"
@@ -66,6 +67,9 @@ class="status-toggle {% if r.status == 'Active' %}is-active{% else %}is-returned
 {{ r.status }}
 </button>
 </form>
+{% else %}
+<span class="status-toggle is-returned is-static">{{ r.status }}</span>
+{% endif %}
 </td>
 
 </tr>
