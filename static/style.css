@@ -4,16 +4,15 @@ GENERAL
 
 body{
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-background:#f5f6fa;
+background:
+radial-gradient(circle at 90% 8%,rgba(255,231,204,0.22),transparent 34%),
+radial-gradient(circle at 10% 22%,rgba(186,230,253,0.28),transparent 42%),
+linear-gradient(160deg,#f2f9ff 0%,#edf7ff 52%,#e8f3ff 100%);
 margin:0;
 color:#333;
 }
 
 .dashboard-page{
-background:
-radial-gradient(circle at 14% 16%,rgba(11,63,111,0.12),transparent 40%),
-radial-gradient(circle at 86% 10%,rgba(15,118,110,0.12),transparent 36%),
-linear-gradient(160deg,#edf2f7 0%,#e5edf5 50%,#deebf4 100%);
 min-height:100vh;
 }
 
