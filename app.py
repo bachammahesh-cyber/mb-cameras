@@ -16,7 +16,7 @@ DB_READY = False
 # -----------------------
 
 def get_db():
-    conn = sqlite3.connect(DATABASE)
+    conn = sqlite3.connect(DATABASE, timeout=30)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -127,6 +127,8 @@ def ensure_db_ready():
 
 @app.before_request
 def bootstrap_db():
+    if request.endpoint in {"healthz", "static"}:
+        return
     ensure_db_ready()
 
 
@@ -164,7 +166,7 @@ def login():
     return render_template("login.html")
 
 
-@app.route("/healthz")
+@app.route("/healthz", methods=["GET", "HEAD"])
 def healthz():
     return "ok", 200
 
