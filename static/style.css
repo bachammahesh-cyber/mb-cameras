@@ -193,6 +193,47 @@ transition:0.2s;
 transform:translateY(-2px);
 }
 
+.dashboard-cards a{
+text-decoration:none;
+color:inherit;
+}
+
+.dash-card{
+border:1px solid rgba(255,255,255,0.35);
+box-shadow:0 10px 22px rgba(15,23,42,0.14);
+}
+
+.dash-card-title{
+margin-top:0;
+margin-bottom:8px;
+font-family:"Marker Felt","Avenir Next Condensed","Trebuchet MS",sans-serif;
+font-size:24px;
+letter-spacing:0.04em;
+line-height:1.2;
+}
+
+.dash-card p{
+margin:0;
+font-weight:600;
+color:rgba(12,18,33,0.86);
+}
+
+.tone-rental{
+background:linear-gradient(135deg,#ffe8cc 0%,#ffd8a8 100%);
+}
+
+.tone-records{
+background:linear-gradient(135deg,#dbeafe 0%,#bfdbfe 100%);
+}
+
+.tone-inventory{
+background:linear-gradient(135deg,#dcfce7 0%,#bbf7d0 100%);
+}
+
+.tone-financials{
+background:linear-gradient(135deg,#f3e8ff 0%,#e9d5ff 100%);
+}
+
 /* ------------------------
 TABLES
 ------------------------ */
@@ -319,6 +360,10 @@ font-size:12px;
 
 .cards{
 grid-template-columns:1fr;
+}
+
+.dash-card-title{
+font-size:20px;
 }
 
 .equipment-grid{
