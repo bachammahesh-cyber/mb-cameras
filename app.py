@@ -89,6 +89,17 @@ def init_db():
     )
     """)
 
+    # Backward-compatible migration for older DB files.
+    rental_cols = [
+        row["name"] for row in cursor.execute(
+            "PRAGMA table_info(rental_items)"
+        ).fetchall()
+    ]
+    if "status" not in rental_cols:
+        cursor.execute(
+            "ALTER TABLE rental_items ADD COLUMN status TEXT DEFAULT 'Active'"
+        )
+
     conn.commit()
     conn.close()
 
@@ -395,30 +406,31 @@ def return_rental(rental_id):
         return redirect("/")
 
     conn = get_db()
-
-    conn.execute(
-        "UPDATE rentals SET status='Returned' WHERE id=?",
-        (rental_id,)
-    )
-
-    item_ids = conn.execute(
-        "SELECT item_id FROM rental_items WHERE rental_id=?",
-        (rental_id,)
-    ).fetchall()
-
-    for row in item_ids:
+    try:
         conn.execute(
-            "UPDATE items SET status='Available' WHERE id=?",
-            (row["item_id"],)
+            "UPDATE rentals SET status='Returned' WHERE id=?",
+            (rental_id,)
         )
 
-    conn.execute(
-        "UPDATE rental_items SET status='Returned' WHERE rental_id=?",
-        (rental_id,)
-    )
+        item_ids = conn.execute(
+            "SELECT item_id FROM rental_items WHERE rental_id=?",
+            (rental_id,)
+        ).fetchall()
 
-    conn.commit()
-    conn.close()
+        for row in item_ids:
+            conn.execute(
+                "UPDATE items SET status='Available' WHERE id=?",
+                (row["item_id"],)
+            )
+
+        conn.execute(
+            "UPDATE rental_items SET status='Returned' WHERE rental_id=?",
+            (rental_id,)
+        )
+
+        conn.commit()
+    finally:
+        conn.close()
 
     return redirect("/rental_records")
 
