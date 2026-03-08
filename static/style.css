@@ -450,13 +450,15 @@ width:100%;
 @media(max-width:560px){
 
 .brand-band{
-justify-content:flex-start;
+justify-content:center;
 padding-bottom:52px;
 }
 
 .brand-band .brand-title{
 font-size:20px;
 letter-spacing:0.06em;
+width:100%;
+justify-content:center;
 }
 
 .brand-band a,
