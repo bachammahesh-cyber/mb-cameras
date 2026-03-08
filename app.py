@@ -376,6 +376,41 @@ def rental_records():
     )
 
 
+@app.route("/return_rental/<int:rental_id>", methods=["POST"])
+def return_rental(rental_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+
+    conn.execute(
+        "UPDATE rentals SET status='Returned' WHERE id=?",
+        (rental_id,)
+    )
+
+    item_ids = conn.execute(
+        "SELECT item_id FROM rental_items WHERE rental_id=?",
+        (rental_id,)
+    ).fetchall()
+
+    for row in item_ids:
+        conn.execute(
+            "UPDATE items SET status='Available' WHERE id=?",
+            (row["item_id"],)
+        )
+
+    conn.execute(
+        "UPDATE rental_items SET status='Returned' WHERE rental_id=?",
+        (rental_id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/rental_records")
+
+
 # -----------------------
 # Credit report
 # -----------------------

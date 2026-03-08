@@ -37,6 +37,7 @@
 <th>Paid</th>
 <th>Balance</th>
 <th>Status</th>
+<th>Action</th>
 
 </tr>
 </thead>
@@ -59,6 +60,15 @@
 <td>₹{{ r.advance_paid }}</td>
 <td>₹{{ r.balance }}</td>
 <td>{{ r.status }}</td>
+<td>
+{% if r.status == "Active" %}
+<form method="POST" action="/return_rental/{{ r.id }}">
+<button type="submit">Return</button>
+</form>
+{% else %}
+Returned
+{% endif %}
+</td>
 
 </tr>
 
