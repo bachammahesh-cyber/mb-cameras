@@ -406,8 +406,8 @@ def credit_report():
 
 
 # -----------------------
-# Run app
+# Run app (local only)
 # -----------------------
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

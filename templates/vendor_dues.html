@@ -15,19 +15,36 @@
 
 <br><br>
 
+<table class="records-table">
+
+<thead>
+<tr>
+<th>Vendor</th>
+<th>Equipment</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Balance</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody>
+
 {% for v in vendors %}
 
-<div style="border-bottom:1px solid #444;padding:10px;">
+<tr>
 
-<strong>{{ v["vendor_name"] }}</strong><br>
+<td>{{ v["vendor_name"] }}</td>
 
-Equipment: {{ v["item_name"] }}<br>
+<td>{{ v["item_name"] }}</td>
 
-Total: ₹{{ v["total"] }}<br>
+<td>₹{{ v["total"] }}</td>
 
-Paid: ₹{{ v["paid"] }}<br>
+<td>₹{{ v["paid"] }}</td>
 
-Balance: ₹{{ v["balance"] }}<br>
+<td>₹{{ v["balance"] }}</td>
+
+<td>
 
 {% if v["balance"] > 0 %}
 
@@ -45,9 +62,15 @@ Balance: ₹{{ v["balance"] }}<br>
 
 {% endif %}
 
-</div>
+</td>
+
+</tr>
 
 {% endfor %}
+
+</tbody>
+
+</table>
 
 </div>
 

@@ -19,8 +19,9 @@
 
 <h2>Customer Payments</h2>
 
-<table>
+<table class="records-table">
 
+<thead>
 <tr>
 <th>ID</th>
 <th>Date</th>
@@ -30,6 +31,9 @@
 <th>Balance</th>
 <th>Add Payment</th>
 </tr>
+</thead>
+
+<tbody>
 
 {% for r in rentals %}
 
@@ -65,6 +69,8 @@
 
 {% endfor %}
 
+</tbody>
+
 </table>
 
 </div>
@@ -75,17 +81,21 @@
 
 <h2>Vendor Payments</h2>
 
-<table>
+<table class="records-table">
 
+<thead>
 <tr>
 <th>ID</th>
 <th>Vendor</th>
-<th>Date</th>
+<th>Equipment</th>
 <th>Total</th>
 <th>Paid</th>
 <th>Balance</th>
 <th>Pay Vendor</th>
 </tr>
+</thead>
+
+<tbody>
 
 {% for v in vendors %}
 
@@ -95,9 +105,7 @@
 
 <td>{{v.vendor_name}}</td>
 
-<td>
-{{v.id}}
-</td>
+<td>{{v.item_name}}</td>
 
 <td>₹{{v.total}}</td>
 
@@ -120,6 +128,8 @@
 </tr>
 
 {% endfor %}
+
+</tbody>
 
 </table>
 
