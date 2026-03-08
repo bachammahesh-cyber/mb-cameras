@@ -34,6 +34,64 @@ font-size:14px;
 }
 
 /* ------------------------
+BRAND BAND
+------------------------ */
+
+.brand-band{
+position:relative;
+justify-content:center;
+padding:20px 30px;
+background:
+linear-gradient(120deg,#0f172a 0%,#0b3f6f 45%,#0f766e 100%);
+border-bottom:none;
+box-shadow:0 8px 24px rgba(2,12,27,0.25);
+overflow:hidden;
+}
+
+.brand-band::before{
+content:"";
+position:absolute;
+inset:0;
+background:radial-gradient(circle at 18% 15%,rgba(255,255,255,0.22),transparent 42%);
+pointer-events:none;
+}
+
+.brand-band .brand-title{
+margin:0;
+position:relative;
+z-index:1;
+font-size:28px;
+font-weight:700;
+letter-spacing:0.25em;
+color:#f8fafc;
+text-transform:uppercase;
+text-shadow:0 4px 16px rgba(0,0,0,0.35);
+}
+
+.brand-band a,
+.brand-band .logout{
+position:absolute;
+right:30px;
+top:50%;
+transform:translateY(-50%);
+z-index:2;
+padding:8px 14px;
+border-radius:999px;
+text-decoration:none;
+font-size:13px;
+font-weight:600;
+color:#f8fafc;
+border:1px solid rgba(248,250,252,0.4);
+background:rgba(15,23,42,0.28);
+backdrop-filter:blur(4px);
+}
+
+.brand-band a:hover,
+.brand-band .logout:hover{
+background:rgba(15,23,42,0.45);
+}
+
+/* ------------------------
 CONTAINER
 ------------------------ */
 
@@ -219,6 +277,22 @@ MOBILE RESPONSIVE
 ------------------------ */
 
 @media(max-width:800px){
+
+.brand-band{
+padding:16px 14px;
+}
+
+.brand-band .brand-title{
+font-size:20px;
+letter-spacing:0.16em;
+}
+
+.brand-band a,
+.brand-band .logout{
+right:14px;
+padding:6px 10px;
+font-size:12px;
+}
 
 .cards{
 grid-template-columns:1fr;
