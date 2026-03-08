@@ -104,26 +104,28 @@ def init_db():
     conn.close()
 
 
-def create_owner():
+def seed_default_users():
 
     conn = get_db()
     cursor = conn.cursor()
 
-    owner = cursor.execute(
-        "SELECT * FROM users WHERE role='owner'"
-    ).fetchone()
+    defaults = [
+        ("maheshbacham", "aA@9440984550", "owner"),
+        ("gopi", "9515369042", "manager")
+    ]
 
-    if not owner:
-
-        password = generate_password_hash("admin123")
+    for username, raw_password, role in defaults:
+        password = generate_password_hash(raw_password)
 
         cursor.execute("""
         INSERT INTO users(username,password,role)
         VALUES(?,?,?)
-        """, ("owner", password, "owner"))
+        ON CONFLICT(username) DO UPDATE SET
+            password=excluded.password,
+            role=excluded.role
+        """, (username, password, role))
 
-        conn.commit()
-
+    conn.commit()
     conn.close()
 
 
@@ -132,7 +134,7 @@ def ensure_db_ready():
     if DB_READY:
         return
     init_db()
-    create_owner()
+    seed_default_users()
     DB_READY = True
 
 
