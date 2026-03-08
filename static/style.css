@@ -9,6 +9,14 @@ margin:0;
 color:#333;
 }
 
+.dashboard-page{
+background:
+radial-gradient(circle at 12% 18%,rgba(148,197,255,0.26),transparent 38%),
+radial-gradient(circle at 88% 8%,rgba(110,231,255,0.2),transparent 34%),
+linear-gradient(160deg,#edf4fb 0%,#e8f2fa 52%,#e3eef8 100%);
+min-height:100vh;
+}
+
 /* ------------------------
 HEADER
 ------------------------ */
