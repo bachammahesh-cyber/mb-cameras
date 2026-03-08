@@ -256,7 +256,7 @@ color:inherit;
 }
 
 .dash-card{
-border:2px solid #0b3f6f;
+border:1px solid #0b3f6f;
 box-shadow:0 10px 22px rgba(15,23,42,0.14);
 }
 
@@ -495,8 +495,9 @@ padding-bottom:52px;
 }
 
 .brand-band .brand-title{
-font-size:20px;
-letter-spacing:0.06em;
+font-size:24px;
+font-weight:800;
+letter-spacing:0.08em;
 width:100%;
 justify-content:center;
 }
