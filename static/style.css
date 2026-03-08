@@ -320,6 +320,31 @@ margin-top:0;
 min-width:90px;
 }
 
+.status-toggle{
+background:transparent;
+border:none;
+padding:0;
+min-height:auto;
+font-size:14px;
+font-weight:700;
+text-decoration:underline;
+text-underline-offset:3px;
+cursor:pointer;
+}
+
+.status-toggle:hover{
+background:transparent;
+opacity:0.85;
+}
+
+.status-toggle.is-active{
+color:#0b5fae;
+}
+
+.status-toggle.is-returned{
+color:#0f766e;
+}
+
 .records-table thead{
 background:#f8fafc;
 }

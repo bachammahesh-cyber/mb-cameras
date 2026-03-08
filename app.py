@@ -399,17 +399,27 @@ def rental_records():
     )
 
 
-@app.route("/return_rental/<int:rental_id>", methods=["POST"])
-def return_rental(rental_id):
+@app.route("/toggle_rental_status/<int:rental_id>", methods=["POST"])
+def toggle_rental_status(rental_id):
 
     if "user_id" not in session:
         return redirect("/")
 
     conn = get_db()
     try:
-        conn.execute(
-            "UPDATE rentals SET status='Returned' WHERE id=?",
+        rental = conn.execute(
+            "SELECT status FROM rentals WHERE id=?",
             (rental_id,)
+        ).fetchone()
+
+        if not rental:
+            return redirect("/rental_records")
+
+        new_status = "Returned" if rental["status"] == "Active" else "Active"
+
+        conn.execute(
+            "UPDATE rentals SET status=? WHERE id=?",
+            (new_status, rental_id)
         )
 
         item_ids = conn.execute(
@@ -419,13 +429,16 @@ def return_rental(rental_id):
 
         for row in item_ids:
             conn.execute(
-                "UPDATE items SET status='Available' WHERE id=?",
-                (row["item_id"],)
+                "UPDATE items SET status=? WHERE id=?",
+                (
+                    "Available" if new_status == "Returned" else "Rented",
+                    row["item_id"]
+                )
             )
 
         conn.execute(
-            "UPDATE rental_items SET status='Returned' WHERE rental_id=?",
-            (rental_id,)
+            "UPDATE rental_items SET status=? WHERE rental_id=?",
+            (new_status, rental_id)
         )
 
         conn.commit()

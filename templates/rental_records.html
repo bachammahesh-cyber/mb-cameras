@@ -42,7 +42,6 @@
 <th>Paid</th>
 <th>Balance</th>
 <th>Status</th>
-<th>Action</th>
 
 </tr>
 </thead>
@@ -64,15 +63,15 @@
 <td>₹{{ r.total_amount }}</td>
 <td>₹{{ r.advance_paid }}</td>
 <td>₹{{ r.balance }}</td>
-<td>{{ r.status }}</td>
 <td>
-{% if r.status == "Active" %}
-<form method="POST" action="/return_rental/{{ r.id }}">
-<button type="submit">Return</button>
+<form method="POST" action="/toggle_rental_status/{{ r.id }}">
+<button
+type="submit"
+class="status-toggle {% if r.status == 'Active' %}is-active{% else %}is-returned{% endif %}"
+>
+{{ r.status }}
+</button>
 </form>
-{% else %}
-Returned
-{% endif %}
 </td>
 
 </tr>
