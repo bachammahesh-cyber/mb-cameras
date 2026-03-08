@@ -64,7 +64,7 @@ display:inline-flex;
 align-items:center;
 gap:12px;
 font-size:40px;
-font-family:"Palatino Linotype","Book Antiqua",Palatino,serif;
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
 font-weight:700;
 letter-spacing:0.14em;
 color:#f8fafc;
@@ -207,7 +207,7 @@ box-shadow:0 10px 22px rgba(15,23,42,0.14);
 .dash-card-title{
 margin-top:0;
 margin-bottom:8px;
-font-family:"Baskerville","Palatino Linotype","Times New Roman",serif;
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
 font-size:26px;
 font-weight:600;
 letter-spacing:0.02em;
