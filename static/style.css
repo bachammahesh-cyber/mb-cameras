@@ -63,10 +63,10 @@ z-index:1;
 display:inline-flex;
 align-items:center;
 gap:12px;
-font-size:42px;
-font-family:"Copperplate","Arial Black","Trebuchet MS",sans-serif;
-font-weight:900;
-letter-spacing:0.28em;
+font-size:40px;
+font-family:"Palatino Linotype","Book Antiqua",Palatino,serif;
+font-weight:700;
+letter-spacing:0.14em;
 color:#f8fafc;
 text-transform:uppercase;
 text-shadow:0 6px 20px rgba(0,0,0,0.45);
@@ -207,32 +207,34 @@ box-shadow:0 10px 22px rgba(15,23,42,0.14);
 .dash-card-title{
 margin-top:0;
 margin-bottom:8px;
-font-family:"Marker Felt","Avenir Next Condensed","Trebuchet MS",sans-serif;
-font-size:24px;
-letter-spacing:0.04em;
+font-family:"Baskerville","Palatino Linotype","Times New Roman",serif;
+font-size:26px;
+font-weight:600;
+letter-spacing:0.02em;
 line-height:1.2;
+color:#0b2e4f;
 }
 
 .dash-card p{
 margin:0;
-font-weight:600;
-color:rgba(12,18,33,0.86);
+font-weight:500;
+color:#16446d;
 }
 
 .dashboard-cards .tone-rental{
-background:linear-gradient(135deg,#ffedd5 0%,#fdba74 100%);
+background:linear-gradient(140deg,#eaf6ff 0%,#cfe9ff 52%,#b9dcfb 100%);
 }
 
 .dashboard-cards .tone-records{
-background:linear-gradient(135deg,#dbeafe 0%,#60a5fa 100%);
+background:linear-gradient(140deg,#e4f3ff 0%,#c8e5fa 50%,#add8f5 100%);
 }
 
 .dashboard-cards .tone-inventory{
-background:linear-gradient(135deg,#dcfce7 0%,#4ade80 100%);
+background:linear-gradient(140deg,#e9f7ff 0%,#cee9fb 55%,#b5daf0 100%);
 }
 
 .dashboard-cards .tone-financials{
-background:linear-gradient(135deg,#f5d0fe 0%,#c084fc 100%);
+background:linear-gradient(140deg,#edf8ff 0%,#d2ebfb 55%,#bddff5 100%);
 }
 
 /* ------------------------
@@ -342,8 +344,8 @@ padding:16px 14px;
 }
 
 .brand-band .brand-title{
-font-size:20px;
-letter-spacing:0.16em;
+font-size:24px;
+letter-spacing:0.1em;
 gap:8px;
 }
 
