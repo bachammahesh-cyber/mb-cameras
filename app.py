@@ -397,7 +397,8 @@ def rental_records():
 
     return render_template(
         "rental_records.html",
-        rentals=rentals
+        rentals=rentals,
+        role=session["role"]
     )
 
 
@@ -447,6 +448,136 @@ def toggle_rental_status(rental_id):
             (new_status, rental_id)
         )
 
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/rental_records")
+
+
+@app.route("/edit_rental/<int:rental_id>", methods=["GET", "POST"])
+def edit_rental(rental_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "owner":
+        return redirect("/rental_records")
+
+    conn = get_db()
+
+    rental = conn.execute(
+        "SELECT * FROM rentals WHERE id=?",
+        (rental_id,)
+    ).fetchone()
+
+    if not rental:
+        conn.close()
+        return redirect("/rental_records")
+
+    if request.method == "POST":
+
+        customer_name = request.form["customer_name"]
+        phone = request.form["phone"]
+        start_date = request.form["start_date"]
+        end_date = request.form["end_date"]
+        advance_paid = float(request.form["advance_paid"])
+        status = request.form["status"]
+
+        d1 = datetime.strptime(start_date, "%Y-%m-%d")
+        d2 = datetime.strptime(end_date, "%Y-%m-%d")
+        days = (d2 - d1).days + 1
+
+        if days < 1:
+            conn.close()
+            return redirect(f"/edit_rental/{rental_id}")
+
+        try:
+            conn.execute("""
+            UPDATE rentals
+            SET customer_name=?, phone=?, start_date=?, end_date=?, advance_paid=?, status=?
+            WHERE id=?
+            """, (
+                customer_name,
+                phone,
+                start_date,
+                end_date,
+                advance_paid,
+                status,
+                rental_id
+            ))
+
+            conn.execute("""
+            UPDATE rental_items
+            SET days=?, total=rate_per_day * ?, status=?
+            WHERE rental_id=?
+            """, (
+                days,
+                days,
+                status,
+                rental_id
+            ))
+
+            total_amount = conn.execute("""
+            SELECT COALESCE(SUM(total), 0) AS total_amount
+            FROM rental_items
+            WHERE rental_id=?
+            """, (rental_id,)).fetchone()["total_amount"]
+
+            balance = total_amount - advance_paid
+
+            conn.execute("""
+            UPDATE rentals
+            SET total_amount=?, balance=?
+            WHERE id=?
+            """, (total_amount, balance, rental_id))
+
+            item_ids = conn.execute(
+                "SELECT item_id FROM rental_items WHERE rental_id=?",
+                (rental_id,)
+            ).fetchall()
+
+            for row in item_ids:
+                conn.execute(
+                    "UPDATE items SET status=? WHERE id=?",
+                    ("Rented" if status == "Active" else "Available", row["item_id"])
+                )
+
+            conn.commit()
+        finally:
+            conn.close()
+
+        return redirect("/rental_records")
+
+    conn.close()
+    return render_template("edit_rental.html", rental=rental)
+
+
+@app.route("/delete_rental/<int:rental_id>", methods=["POST"])
+def delete_rental(rental_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session.get("role") != "owner":
+        return redirect("/rental_records")
+
+    conn = get_db()
+    try:
+        item_ids = conn.execute(
+            "SELECT item_id FROM rental_items WHERE rental_id=?",
+            (rental_id,)
+        ).fetchall()
+
+        for row in item_ids:
+            conn.execute(
+                "UPDATE items SET status='Available' WHERE id=?",
+                (row["item_id"],)
+            )
+
+        conn.execute("DELETE FROM rental_items WHERE rental_id=?", (rental_id,))
+        conn.execute("DELETE FROM outside_items WHERE rental_id=?", (rental_id,))
+        conn.execute("DELETE FROM rentals WHERE id=?", (rental_id,))
         conn.commit()
     finally:
         conn.close()

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Edit Rental</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+<h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<h2 class="page-title">Edit Rental Entry</h2>
+
+<form method="POST">
+
+<label>Customer Name</label>
+<input type="text" name="customer_name" value="{{ rental.customer_name }}" required>
+
+<label>Phone</label>
+<input type="text" name="phone" value="{{ rental.phone }}" required>
+
+<label>Start Date</label>
+<input type="date" name="start_date" value="{{ rental.start_date }}" required>
+
+<label>End Date</label>
+<input type="date" name="end_date" value="{{ rental.end_date }}" required>
+
+<label>Advance Paid</label>
+<input type="number" name="advance_paid" value="{{ rental.advance_paid }}" required>
+
+<label>Status</label>
+<select name="status" required>
+<option value="Active" {% if rental.status == "Active" %}selected{% endif %}>Active</option>
+<option value="Returned" {% if rental.status == "Returned" %}selected{% endif %}>Returned</option>
+</select>
+
+<div class="center">
+<button type="submit">Save Changes</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<div class="bottom-logout-band">
+<a href="/logout">Logout</a>
+</div>
+
+</body>
+</html>

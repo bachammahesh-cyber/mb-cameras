@@ -36,6 +36,9 @@
 <th>Paid</th>
 <th>Balance</th>
 <th>Status</th>
+{% if role == "owner" %}
+<th>Owner Actions</th>
+{% endif %}
 
 </tr>
 </thead>
@@ -71,6 +74,16 @@ class="status-toggle {% if r.status == 'Active' %}is-active{% else %}is-returned
 <span class="status-toggle is-returned is-static">{{ r.status }}</span>
 {% endif %}
 </td>
+{% if role == "owner" %}
+<td>
+<div class="table-actions">
+<a class="mini-btn mini-btn-edit" href="/edit_rental/{{ r.id }}">Edit</a>
+<form method="POST" action="/delete_rental/{{ r.id }}" onsubmit="return confirm('Delete this rental entry?');">
+<button type="submit" class="mini-btn mini-btn-delete">Delete</button>
+</form>
+</div>
+</td>
+{% endif %}
 
 </tr>
 

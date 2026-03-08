@@ -219,6 +219,17 @@ font-size:14px;
 box-sizing:border-box;
 }
 
+select{
+width:100%;
+padding:10px;
+margin-top:6px;
+border-radius:6px;
+border:1px solid #ddd;
+font-size:14px;
+box-sizing:border-box;
+background:white;
+}
+
 /* ------------------------
 BUTTONS
 ------------------------ */
@@ -356,6 +367,36 @@ color:#0f766e;
 
 .status-toggle.is-static{
 cursor:default;
+}
+
+.table-actions{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.mini-btn{
+display:inline-flex;
+align-items:center;
+justify-content:center;
+padding:6px 10px;
+min-height:auto;
+border-radius:6px;
+font-size:13px;
+font-weight:700;
+text-decoration:none;
+border:none;
+cursor:pointer;
+}
+
+.mini-btn-edit{
+background:#dbeafe;
+color:#0b3f6f;
+}
+
+.mini-btn-delete{
+background:#fee2e2;
+color:#991b1b;
 }
 
 .records-table thead{
@@ -522,6 +563,11 @@ padding:10px 12px;
 flex-direction:column;
 align-items:stretch;
 min-width:110px;
+}
+
+.table-actions{
+flex-direction:column;
+align-items:stretch;
 }
 
 .records-table form button{
