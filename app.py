@@ -100,6 +100,24 @@ def init_db():
             "ALTER TABLE rental_items ADD COLUMN status TEXT DEFAULT 'Active'"
         )
 
+    outside_cols = [
+        row["name"] for row in cursor.execute(
+            "PRAGMA table_info(outside_items)"
+        ).fetchall()
+    ]
+    if "paid" not in outside_cols:
+        cursor.execute(
+            "ALTER TABLE outside_items ADD COLUMN paid REAL DEFAULT 0"
+        )
+    if "balance" not in outside_cols:
+        cursor.execute(
+            "ALTER TABLE outside_items ADD COLUMN balance REAL"
+        )
+    cursor.execute("""
+    UPDATE outside_items
+    SET balance = COALESCE(balance, total - COALESCE(paid, 0))
+    """)
+
     conn.commit()
     conn.close()
 
