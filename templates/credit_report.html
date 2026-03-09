@@ -18,8 +18,31 @@
 <h2 class="page-title">Financials</h2>
 
 <div class="box financial-box">
+<h2>Filter Period</h2>
+<form class="financial-filter-form" method="GET" action="/credit_report">
+<div>
+<label>Specific Month</label>
+<input type="month" name="month" value="{{ filters['month'] }}">
+</div>
+<div>
+<label>From Date</label>
+<input type="date" name="from_date" value="{{ filters['from_date'] }}">
+</div>
+<div>
+<label>To Date</label>
+<input type="date" name="to_date" value="{{ filters['to_date'] }}">
+</div>
+<div class="financial-filter-actions">
+<button type="submit">Apply</button>
+<a href="/credit_report" class="mini-btn mini-btn-edit">Clear</a>
+</div>
+</form>
+</div>
+
+<div class="box financial-box">
 
 <h2>Revenues</h2>
+<p class="period-label">Period: {{ revenues["period_label"] }}</p>
 
 <div class="revenue-grid">
 <div class="revenue-card">

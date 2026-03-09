@@ -432,6 +432,30 @@ font-size:24px;
 color:#0b3f6f;
 }
 
+.financial-filter-form{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:12px;
+align-items:end;
+}
+
+.financial-filter-form label{
+margin-top:0;
+}
+
+.financial-filter-actions{
+display:flex;
+gap:8px;
+align-items:center;
+}
+
+.period-label{
+margin:0 0 10px;
+font-size:13px;
+font-weight:600;
+color:#475569;
+}
+
 .revenue-grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
