@@ -27,11 +27,11 @@
 <thead>
 <tr>
 
+<th>Date</th>
 <th>ID</th>
 <th>Customer</th>
 <th>Phone</th>
-<th>Start Date</th>
-<th>End Date</th>
+<th>Days</th>
 <th>Total</th>
 <th>Paid</th>
 <th>Balance</th>
@@ -49,13 +49,12 @@
 
 <tr>
 
+<td>{{ r.given_date_display }}</td>
 <td>{{ r.id }}</td>
 <td>{{ r.customer_name }}</td>
 <td>{{ r.phone }}</td>
 
-<td>{{ r.start_date[8:10] }}/{{ r.start_date[5:7] }}/{{ r.start_date[2:4] }}</td>
-
-<td>{{ r.end_date[8:10] }}/{{ r.end_date[5:7] }}/{{ r.end_date[2:4] }}</td>
+<td>{{ r.rental_days }}</td>
 
 <td>₹{{ r.total_amount }}</td>
 <td>₹{{ r.advance_paid }}</td>

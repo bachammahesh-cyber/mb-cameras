@@ -615,11 +615,34 @@ def rental_records():
 
     conn = get_db()
 
-    rentals = conn.execute(
+    rental_rows = conn.execute(
         "SELECT * FROM rentals ORDER BY id DESC"
     ).fetchall()
 
     conn.close()
+
+    rentals = []
+    for row in rental_rows:
+        start_date = row["start_date"]
+        end_date = row["end_date"]
+        rental_days = 0
+        given_date_display = start_date
+
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            rental_days = (end_dt - start_dt).days + 1
+            if rental_days < 0:
+                rental_days = 0
+            given_date_display = start_dt.strftime("%d/%m/%y")
+        except (TypeError, ValueError):
+            pass
+
+        rentals.append({
+            **dict(row),
+            "rental_days": rental_days,
+            "given_date_display": given_date_display
+        })
 
     return render_template(
         "rental_records.html",
