@@ -426,6 +426,39 @@ border-bottom:none;
 background:#f9fbfd;
 }
 
+.financial-box h2{
+margin:0 0 14px;
+font-size:24px;
+color:#0b3f6f;
+}
+
+.revenue-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:12px;
+}
+
+.revenue-card{
+background:linear-gradient(145deg,#f7fbff 0%,#ebf4ff 100%);
+border:1px solid #d7e7fb;
+border-radius:10px;
+padding:12px;
+}
+
+.revenue-card h3{
+margin:0;
+font-size:13px;
+font-weight:600;
+color:#475569;
+}
+
+.revenue-card p{
+margin:8px 0 0;
+font-size:21px;
+font-weight:800;
+color:#0b3f6f;
+}
+
 /* ------------------------
 EQUIPMENT GRID
 ------------------------ */

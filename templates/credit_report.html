@@ -17,9 +17,38 @@
 
 <h2 class="page-title">Financials</h2>
 
-<div class="box">
+<div class="box financial-box">
 
-<h2>Customer Payments</h2>
+<h2>Revenues</h2>
+
+<div class="revenue-grid">
+<div class="revenue-card">
+<h3>Customer Total</h3>
+<p>₹{{ revenues["customer_total"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Customer Due</h3>
+<p>₹{{ revenues["customer_due"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Vendor Due</h3>
+<p>₹{{ revenues["vendor_due"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Projected Net</h3>
+<p>₹{{ revenues["projected_net"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Realized Net</h3>
+<p>₹{{ revenues["realized_net"] }}</p>
+</div>
+</div>
+
+</div>
+
+<div class="box financial-box">
+
+<h2>Customer Dues</h2>
 
 <table class="records-table">
 
@@ -79,7 +108,7 @@
 
 
 
-<div class="box">
+<div class="box financial-box">
 
 <h2>Vendor Payments</h2>
 

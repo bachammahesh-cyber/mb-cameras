@@ -866,10 +866,29 @@ def credit_report():
             "total": row_total
         })
 
+    customer_total = sum((r["total_amount"] or 0) for r in rentals)
+    customer_paid = sum((r["advance_paid"] or 0) for r in rentals)
+    customer_due = sum((r["balance"] or 0) for r in rentals)
+    vendor_total = sum((v["total"] or 0) for v in grouped_vendors)
+    vendor_paid = sum((v["paid"] or 0) for v in grouped_vendors)
+    vendor_due = sum((v["balance"] or 0) for v in grouped_vendors)
+
+    revenues = {
+        "customer_total": customer_total,
+        "customer_paid": customer_paid,
+        "customer_due": customer_due,
+        "vendor_total": vendor_total,
+        "vendor_paid": vendor_paid,
+        "vendor_due": vendor_due,
+        "projected_net": customer_total - vendor_total,
+        "realized_net": customer_paid - vendor_paid
+    }
+
     return render_template(
         "credit_report.html",
         rentals=rentals,
-        vendors=grouped_vendors
+        vendors=grouped_vendors,
+        revenues=revenues
     )
 
 
