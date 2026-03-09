@@ -84,6 +84,7 @@ letter-spacing:0.14em;
 color:#f8fafc;
 text-transform:uppercase;
 text-shadow:0 6px 20px rgba(0,0,0,0.45);
+-webkit-text-stroke:0.8px rgba(248,250,252,0.9);
 }
 
 .brand-home{
