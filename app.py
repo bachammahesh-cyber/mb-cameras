@@ -381,36 +381,44 @@ def save_rental():
             (item_id,)
         )
 
-    # Persist outside equipment as vendor dues.
-    vendor_names = request.form.getlist("vendor_name[]")
-    vendor_rates = request.form.getlist("vendor_rates[]")
-    outside_items = conn.execute("SELECT name FROM items").fetchall()
-    vendor_name = ""
-    for name in vendor_names:
-        if name and name.strip():
-            vendor_name = name.strip()
-            break
+    # Persist selected outside equipment as vendor dues.
+    vendor_name = (
+        request.form.get("vendor_name", "").strip()
+        or next(
+            (
+                name.strip()
+                for name in request.form.getlist("vendor_name[]")
+                if name and name.strip()
+            ),
+            ""
+        )
+    )
+    vendor_item_ids = request.form.getlist("vendor_item_ids")
 
-    for idx, rate_text in enumerate(vendor_rates):
-        if rate_text is None:
-            continue
-
-        rate_text = rate_text.strip()
-        if not rate_text:
-            continue
-
+    for item_id_text in vendor_item_ids:
         try:
-            rate_per_day = float(rate_text)
+            vendor_item_id = int(item_id_text)
         except ValueError:
             continue
 
-        if rate_per_day <= 0:
+        item = conn.execute(
+            "SELECT name, rent_per_day FROM items WHERE id=?",
+            (vendor_item_id,)
+        ).fetchone()
+        if not item:
             continue
 
-        item_name = (
-            outside_items[idx]["name"]
-            if idx < len(outside_items) else f"Outside Item {idx + 1}"
-        )
+        rate_text = request.form.get(f"vendor_rates[{vendor_item_id}]", "").strip()
+        if rate_text:
+            try:
+                rate_per_day = float(rate_text)
+            except ValueError:
+                continue
+            if rate_per_day <= 0:
+                continue
+        else:
+            rate_per_day = item["rent_per_day"]
+
         vendor_total = days * rate_per_day
 
         conn.execute("""
@@ -420,7 +428,7 @@ def save_rental():
         """, (
             rental_id,
             vendor_name,
-            item_name,
+            item["name"],
             rate_per_day,
             days,
             vendor_total,
@@ -688,6 +696,84 @@ def credit_report():
         rentals=rentals,
         vendors=vendors
     )
+
+
+@app.route("/add_payment/<int:rental_id>", methods=["POST"])
+def add_payment(rental_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    payment_text = request.form.get("payment", "").strip()
+    try:
+        payment = float(payment_text)
+    except ValueError:
+        return redirect("/credit_report")
+
+    if payment <= 0:
+        return redirect("/credit_report")
+
+    conn = get_db()
+    try:
+        rental = conn.execute(
+            "SELECT total_amount, advance_paid FROM rentals WHERE id=?",
+            (rental_id,)
+        ).fetchone()
+
+        if not rental:
+            return redirect("/credit_report")
+
+        updated_paid = min(rental["total_amount"], rental["advance_paid"] + payment)
+        balance = rental["total_amount"] - updated_paid
+
+        conn.execute(
+            "UPDATE rentals SET advance_paid=?, balance=? WHERE id=?",
+            (updated_paid, balance, rental_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/credit_report")
+
+
+@app.route("/pay_vendor/<int:vendor_id>", methods=["POST"])
+def pay_vendor(vendor_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    payment_text = request.form.get("payment", "").strip()
+    try:
+        payment = float(payment_text)
+    except ValueError:
+        return redirect("/credit_report")
+
+    if payment <= 0:
+        return redirect("/credit_report")
+
+    conn = get_db()
+    try:
+        vendor = conn.execute(
+            "SELECT total, paid FROM outside_items WHERE id=?",
+            (vendor_id,)
+        ).fetchone()
+
+        if not vendor:
+            return redirect("/credit_report")
+
+        updated_paid = min(vendor["total"], (vendor["paid"] or 0) + payment)
+        balance = vendor["total"] - updated_paid
+
+        conn.execute(
+            "UPDATE outside_items SET paid=?, balance=? WHERE id=?",
+            (updated_paid, balance, vendor_id)
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/credit_report")
 
 
 # -----------------------

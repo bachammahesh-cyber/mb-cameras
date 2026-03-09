@@ -95,7 +95,7 @@ value="{{item['rent_per_day']}}"
 <h3>Outside Equipment (Vendor)</h3>
 
 <label>Vendor Name</label>
-<input type="text" name="vendor_name[]">
+<input type="text" name="vendor_name">
 
 
 <div class="equipment-grid">
@@ -104,7 +104,7 @@ value="{{item['rent_per_day']}}"
 
 <label class="equipment-card">
 
-<input type="checkbox">
+<input type="checkbox" name="vendor_item_ids" value="{{item['id']}}">
 
 <div class="equipment-info">
 
@@ -117,7 +117,7 @@ value="{{item['rent_per_day']}}"
 <input
 type="number"
 class="vendor-price"
-name="vendor_rates[]"
+name="vendor_rates[{{item['id']}}]"
 placeholder="Price"
 />
 
