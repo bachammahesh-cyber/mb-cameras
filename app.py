@@ -23,7 +23,10 @@ DATABASE_URL = (
     os.getenv("DATABASE_URL", "").strip()
     or os.getenv("NEON_DATABASE_URL", "").strip()
 )
-USE_POSTGRES = DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")
+if DATABASE_URL.startswith(("'", '"')) and DATABASE_URL.endswith(("'", '"')):
+    DATABASE_URL = DATABASE_URL[1:-1].strip()
+
+USE_POSTGRES = bool(DATABASE_URL)
 IS_RENDER = bool(
     os.getenv("RENDER")
     or os.getenv("RENDER_SERVICE_ID")
