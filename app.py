@@ -7,7 +7,11 @@ import os
 app = Flask(__name__)
 app.secret_key = "super_secret_key_change_this"
 
-DATABASE = "database.db"
+DEFAULT_DATABASE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "database.db"
+)
+DATABASE = os.getenv("DATABASE_PATH", DEFAULT_DATABASE)
 DB_READY = False
 
 
@@ -16,6 +20,9 @@ DB_READY = False
 # -----------------------
 
 def get_db():
+    db_dir = os.path.dirname(os.path.abspath(DATABASE))
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
     conn = sqlite3.connect(DATABASE, timeout=30)
     conn.row_factory = sqlite3.Row
     return conn
