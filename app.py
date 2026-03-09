@@ -19,9 +19,22 @@ DEFAULT_DATABASE = os.path.join(
     "database.db"
 )
 DATABASE = os.getenv("DATABASE_PATH", DEFAULT_DATABASE)
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+DATABASE_URL = (
+    os.getenv("DATABASE_URL", "").strip()
+    or os.getenv("NEON_DATABASE_URL", "").strip()
+)
 USE_POSTGRES = DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")
+IS_RENDER = bool(
+    os.getenv("RENDER")
+    or os.getenv("RENDER_SERVICE_ID")
+    or os.getenv("RENDER_EXTERNAL_URL")
+)
 DB_READY = False
+
+if IS_RENDER and not USE_POSTGRES:
+    raise RuntimeError(
+        "Render deployment requires Neon Postgres. Set DATABASE_URL to your Neon connection string."
+    )
 
 
 # -----------------------
