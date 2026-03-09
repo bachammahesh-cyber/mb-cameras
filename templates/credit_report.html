@@ -103,32 +103,32 @@
 
 <tr>
 
-<td>{{v.rental_id}}</td>
+<td>{{ v["rental_id"] }}</td>
 
-<td>{{v.vendor_name}}</td>
+<td>{{ v["vendor_name"] }}</td>
 
 <td>
 <details>
-<summary>View items ({{ v.items|length }})</summary>
+<summary>View items ({{ v["items"]|length }})</summary>
 <ul style="margin:8px 0 0 18px; padding:0;">
-{% for item in v.items %}
+{% for item in v["items"] %}
 <li>{{ item.name }} - ₹{{ item.rate_per_day }}/day - {{ item.days }} day(s) - ₹{{ item.total }}</li>
 {% endfor %}
 </ul>
 </details>
 </td>
 
-<td>₹{{v.total}}</td>
+<td>₹{{ v["total"] }}</td>
 
-<td>₹{{v.paid}}</td>
+<td>₹{{ v["paid"] }}</td>
 
-<td>₹{{v.balance}}</td>
+<td>₹{{ v["balance"] }}</td>
 
 <td>
 
-<form action="/pay_vendor_group/{{v.rental_id}}" method="POST" style="display:flex;gap:6px;">
+<form action="/pay_vendor_group/{{ v['rental_id'] }}" method="POST" style="display:flex;gap:6px;">
 
-<input type="hidden" name="vendor_name" value="{{v.vendor_name_raw}}">
+<input type="hidden" name="vendor_name" value="{{ v['vendor_name_raw'] }}">
 
 <input name="payment" placeholder="Amount">
 
