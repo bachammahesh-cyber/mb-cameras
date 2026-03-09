@@ -692,16 +692,51 @@ def credit_report():
         "SELECT * FROM rentals ORDER BY id DESC"
     ).fetchall()
 
-    vendors = conn.execute(
+    vendor_rows = conn.execute(
         "SELECT * FROM outside_items ORDER BY id DESC"
     ).fetchall()
 
     conn.close()
 
+    grouped_vendors = []
+    groups = {}
+    for row in vendor_rows:
+        vendor_name = (row["vendor_name"] or "").strip()
+        key = (row["rental_id"], vendor_name)
+
+        if key not in groups:
+            groups[key] = {
+                "rental_id": row["rental_id"],
+                "vendor_name_raw": vendor_name,
+                "vendor_name": vendor_name or "Outside Vendor",
+                "total": 0,
+                "paid": 0,
+                "balance": 0,
+                "items": []
+            }
+            grouped_vendors.append(groups[key])
+
+        group = groups[key]
+        row_total = row["total"] or 0
+        row_paid = row["paid"] or 0
+        row_balance = row["balance"]
+        if row_balance is None:
+            row_balance = row_total - row_paid
+
+        group["total"] += row_total
+        group["paid"] += row_paid
+        group["balance"] += row_balance
+        group["items"].append({
+            "name": row["item_name"],
+            "rate_per_day": row["rate_per_day"],
+            "days": row["days"],
+            "total": row_total
+        })
+
     return render_template(
         "credit_report.html",
         rentals=rentals,
-        vendors=vendors
+        vendors=grouped_vendors
     )
 
 
@@ -776,6 +811,60 @@ def pay_vendor(vendor_id):
             "UPDATE outside_items SET paid=?, balance=? WHERE id=?",
             (updated_paid, balance, vendor_id)
         )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/credit_report")
+
+
+@app.route("/pay_vendor_group/<int:rental_id>", methods=["POST"])
+def pay_vendor_group(rental_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    payment_text = request.form.get("payment", "").strip()
+    vendor_name = request.form.get("vendor_name", "").strip()
+    try:
+        payment = float(payment_text)
+    except ValueError:
+        return redirect("/credit_report")
+
+    if payment <= 0:
+        return redirect("/credit_report")
+
+    conn = get_db()
+    try:
+        vendor_rows = conn.execute("""
+        SELECT id,total,COALESCE(paid,0) AS paid,COALESCE(balance,total-COALESCE(paid,0)) AS balance
+        FROM outside_items
+        WHERE rental_id=? AND COALESCE(vendor_name,'')=?
+        ORDER BY id ASC
+        """, (rental_id, vendor_name)).fetchall()
+
+        if not vendor_rows:
+            return redirect("/credit_report")
+
+        remaining_due = sum(row["balance"] for row in vendor_rows)
+        payment_left = min(payment, remaining_due)
+
+        for row in vendor_rows:
+            if payment_left <= 0:
+                break
+            if row["balance"] <= 0:
+                continue
+
+            row_payment = min(row["balance"], payment_left)
+            updated_paid = row["paid"] + row_payment
+            updated_balance = row["total"] - updated_paid
+
+            conn.execute(
+                "UPDATE outside_items SET paid=?, balance=? WHERE id=?",
+                (updated_paid, updated_balance, row["id"])
+            )
+            payment_left -= row_payment
+
         conn.commit()
     finally:
         conn.close()

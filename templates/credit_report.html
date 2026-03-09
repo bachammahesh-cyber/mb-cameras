@@ -87,7 +87,7 @@
 
 <thead>
 <tr>
-<th>ID</th>
+<th>Rental ID</th>
 <th>Vendor</th>
 <th>Equipment</th>
 <th>Total</th>
@@ -103,11 +103,20 @@
 
 <tr>
 
-<td>{{v.id}}</td>
+<td>{{v.rental_id}}</td>
 
 <td>{{v.vendor_name}}</td>
 
-<td>{{v.item_name}}</td>
+<td>
+<details>
+<summary>View items ({{ v.items|length }})</summary>
+<ul style="margin:8px 0 0 18px; padding:0;">
+{% for item in v.items %}
+<li>{{ item.name }} - ₹{{ item.rate_per_day }}/day - {{ item.days }} day(s) - ₹{{ item.total }}</li>
+{% endfor %}
+</ul>
+</details>
+</td>
 
 <td>₹{{v.total}}</td>
 
@@ -117,7 +126,9 @@
 
 <td>
 
-<form action="/pay_vendor/{{v.id}}" method="POST" style="display:flex;gap:6px;">
+<form action="/pay_vendor_group/{{v.rental_id}}" method="POST" style="display:flex;gap:6px;">
+
+<input type="hidden" name="vendor_name" value="{{v.vendor_name_raw}}">
 
 <input name="payment" placeholder="Amount">
 
