@@ -2,13 +2,6 @@ services:
   - type: web
     name: mb-cameras
     runtime: python
-    disk:
-      name: mb-cameras-data
-      mountPath: /var/data
-      sizeGB: 1
-    envVars:
-      - key: DATABASE_PATH
-        value: /var/data/database.db
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn app:app --bind 0.0.0.0:${PORT:-10000} --workers 1 --threads 2 --timeout 120 --graceful-timeout 30 --access-logfile - --error-logfile -"
     healthCheckPath: /healthz

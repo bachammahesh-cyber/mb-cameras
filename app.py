@@ -4,6 +4,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import os
 
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except ImportError:
+    psycopg = None
+    dict_row = None
+
 app = Flask(__name__)
 app.secret_key = "super_secret_key_change_this"
 
@@ -12,6 +19,8 @@ DEFAULT_DATABASE = os.path.join(
     "database.db"
 )
 DATABASE = os.getenv("DATABASE_PATH", DEFAULT_DATABASE)
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+USE_POSTGRES = DATABASE_URL.startswith("postgres://") or DATABASE_URL.startswith("postgresql://")
 DB_READY = False
 
 
@@ -19,7 +28,27 @@ DB_READY = False
 # Database connection
 # -----------------------
 
+class PostgresConnection:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def execute(self, query, params=()):
+        return self._conn.execute(query.replace("?", "%s"), params)
+
+    def commit(self):
+        return self._conn.commit()
+
+    def close(self):
+        return self._conn.close()
+
+
 def get_db():
+    if USE_POSTGRES:
+        if psycopg is None or dict_row is None:
+            raise RuntimeError("DATABASE_URL is set but psycopg is not installed.")
+        conn = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+        return PostgresConnection(conn)
+
     db_dir = os.path.dirname(os.path.abspath(DATABASE))
     if db_dir:
         os.makedirs(db_dir, exist_ok=True)
@@ -35,92 +64,181 @@ def get_db():
 def init_db():
 
     conn = get_db()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT,
-        role TEXT
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS items(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        category TEXT,
-        rent_per_day REAL,
-        status TEXT
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS rentals(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        customer_name TEXT,
-        phone TEXT,
-        start_date TEXT,
-        end_date TEXT,
-        total_amount REAL,
-        advance_paid REAL,
-        balance REAL,
-        status TEXT
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS rental_items(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        rental_id INTEGER,
-        item_id INTEGER,
-        rate_per_day REAL,
-        days INTEGER,
-        total REAL,
-        status TEXT
-    )
-    """)
-
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS outside_items(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        rental_id INTEGER,
-        vendor_name TEXT,
-        item_name TEXT,
-        rate_per_day REAL,
-        days INTEGER,
-        total REAL,
-        paid REAL DEFAULT 0,
-        balance REAL
-    )
-    """)
-
-    # Backward-compatible migration for older DB files.
-    rental_cols = [
-        row["name"] for row in cursor.execute(
-            "PRAGMA table_info(rental_items)"
-        ).fetchall()
-    ]
-    if "status" not in rental_cols:
-        cursor.execute(
-            "ALTER TABLE rental_items ADD COLUMN status TEXT DEFAULT 'Active'"
+    if USE_POSTGRES:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS users(
+            id BIGSERIAL PRIMARY KEY,
+            username TEXT UNIQUE,
+            password TEXT,
+            role TEXT
         )
+        """)
 
-    outside_cols = [
-        row["name"] for row in cursor.execute(
-            "PRAGMA table_info(outside_items)"
-        ).fetchall()
-    ]
-    if "paid" not in outside_cols:
-        cursor.execute(
-            "ALTER TABLE outside_items ADD COLUMN paid REAL DEFAULT 0"
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS items(
+            id BIGSERIAL PRIMARY KEY,
+            name TEXT,
+            category TEXT,
+            rent_per_day DOUBLE PRECISION,
+            status TEXT
         )
-    if "balance" not in outside_cols:
-        cursor.execute(
-            "ALTER TABLE outside_items ADD COLUMN balance REAL"
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS rentals(
+            id BIGSERIAL PRIMARY KEY,
+            customer_name TEXT,
+            phone TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            total_amount DOUBLE PRECISION,
+            advance_paid DOUBLE PRECISION,
+            balance DOUBLE PRECISION,
+            status TEXT
         )
-    cursor.execute("""
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS rental_items(
+            id BIGSERIAL PRIMARY KEY,
+            rental_id BIGINT,
+            item_id BIGINT,
+            rate_per_day DOUBLE PRECISION,
+            days INTEGER,
+            total DOUBLE PRECISION,
+            status TEXT
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS outside_items(
+            id BIGSERIAL PRIMARY KEY,
+            rental_id BIGINT,
+            vendor_name TEXT,
+            item_name TEXT,
+            rate_per_day DOUBLE PRECISION,
+            days INTEGER,
+            total DOUBLE PRECISION,
+            paid DOUBLE PRECISION DEFAULT 0,
+            balance DOUBLE PRECISION
+        )
+        """)
+
+        rental_status_exists = conn.execute("""
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='rental_items' AND column_name='status'
+        """).fetchone()
+        if not rental_status_exists:
+            conn.execute(
+                "ALTER TABLE rental_items ADD COLUMN status TEXT DEFAULT 'Active'"
+            )
+
+        outside_paid_exists = conn.execute("""
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='outside_items' AND column_name='paid'
+        """).fetchone()
+        if not outside_paid_exists:
+            conn.execute(
+                "ALTER TABLE outside_items ADD COLUMN paid DOUBLE PRECISION DEFAULT 0"
+            )
+
+        outside_balance_exists = conn.execute("""
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='outside_items' AND column_name='balance'
+        """).fetchone()
+        if not outside_balance_exists:
+            conn.execute(
+                "ALTER TABLE outside_items ADD COLUMN balance DOUBLE PRECISION"
+            )
+    else:
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS users(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            role TEXT
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS items(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            category TEXT,
+            rent_per_day REAL,
+            status TEXT
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS rentals(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_name TEXT,
+            phone TEXT,
+            start_date TEXT,
+            end_date TEXT,
+            total_amount REAL,
+            advance_paid REAL,
+            balance REAL,
+            status TEXT
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS rental_items(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rental_id INTEGER,
+            item_id INTEGER,
+            rate_per_day REAL,
+            days INTEGER,
+            total REAL,
+            status TEXT
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS outside_items(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rental_id INTEGER,
+            vendor_name TEXT,
+            item_name TEXT,
+            rate_per_day REAL,
+            days INTEGER,
+            total REAL,
+            paid REAL DEFAULT 0,
+            balance REAL
+        )
+        """)
+
+        # Backward-compatible migration for older SQLite DB files.
+        rental_cols = [
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(rental_items)"
+            ).fetchall()
+        ]
+        if "status" not in rental_cols:
+            conn.execute(
+                "ALTER TABLE rental_items ADD COLUMN status TEXT DEFAULT 'Active'"
+            )
+
+        outside_cols = [
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(outside_items)"
+            ).fetchall()
+        ]
+        if "paid" not in outside_cols:
+            conn.execute(
+                "ALTER TABLE outside_items ADD COLUMN paid REAL DEFAULT 0"
+            )
+        if "balance" not in outside_cols:
+            conn.execute(
+                "ALTER TABLE outside_items ADD COLUMN balance REAL"
+            )
+
+    conn.execute("""
     UPDATE outside_items
     SET balance = COALESCE(balance, total - COALESCE(paid, 0))
     """)
@@ -132,7 +250,6 @@ def init_db():
 def seed_default_users():
 
     conn = get_db()
-    cursor = conn.cursor()
 
     defaults = [
         ("maheshbacham", "aA@9440984550", "owner"),
@@ -142,7 +259,7 @@ def seed_default_users():
     for username, raw_password, role in defaults:
         password = generate_password_hash(raw_password)
 
-        cursor.execute("""
+        conn.execute("""
         INSERT INTO users(username,password,role)
         VALUES(?,?,?)
         ON CONFLICT(username) DO UPDATE SET
@@ -335,25 +452,41 @@ def save_rental():
     days = (d2 - d1).days + 1
 
     conn = get_db()
-    cursor = conn.cursor()
 
-    cursor.execute("""
-    INSERT INTO rentals
-    (customer_name,phone,start_date,end_date,
-    total_amount,advance_paid,balance,status)
-    VALUES(?,?,?,?,?,?,?,?)
-    """, (
-        customer_name,
-        phone,
-        start_date,
-        end_date,
-        0,
-        advance_paid,
-        0,
-        "Active"
-    ))
-
-    rental_id = cursor.lastrowid
+    if USE_POSTGRES:
+        rental_id = conn.execute("""
+        INSERT INTO rentals
+        (customer_name,phone,start_date,end_date,
+        total_amount,advance_paid,balance,status)
+        VALUES(?,?,?,?,?,?,?,?)
+        RETURNING id
+        """, (
+            customer_name,
+            phone,
+            start_date,
+            end_date,
+            0,
+            advance_paid,
+            0,
+            "Active"
+        )).fetchone()["id"]
+    else:
+        conn.execute("""
+        INSERT INTO rentals
+        (customer_name,phone,start_date,end_date,
+        total_amount,advance_paid,balance,status)
+        VALUES(?,?,?,?,?,?,?,?)
+        """, (
+            customer_name,
+            phone,
+            start_date,
+            end_date,
+            0,
+            advance_paid,
+            0,
+            "Active"
+        ))
+        rental_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
 
     total_amount = 0
 
