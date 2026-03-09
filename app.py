@@ -363,6 +363,53 @@ def save_rental():
             (item_id,)
         )
 
+    # Persist outside equipment as vendor dues.
+    vendor_names = request.form.getlist("vendor_name[]")
+    vendor_rates = request.form.getlist("vendor_rates[]")
+    outside_items = conn.execute("SELECT name FROM items").fetchall()
+    vendor_name = ""
+    for name in vendor_names:
+        if name and name.strip():
+            vendor_name = name.strip()
+            break
+
+    for idx, rate_text in enumerate(vendor_rates):
+        if rate_text is None:
+            continue
+
+        rate_text = rate_text.strip()
+        if not rate_text:
+            continue
+
+        try:
+            rate_per_day = float(rate_text)
+        except ValueError:
+            continue
+
+        if rate_per_day <= 0:
+            continue
+
+        item_name = (
+            outside_items[idx]["name"]
+            if idx < len(outside_items) else f"Outside Item {idx + 1}"
+        )
+        vendor_total = days * rate_per_day
+
+        conn.execute("""
+        INSERT INTO outside_items
+        (rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
+        VALUES(?,?,?,?,?,?,?,?)
+        """, (
+            rental_id,
+            vendor_name,
+            item_name,
+            rate_per_day,
+            days,
+            vendor_total,
+            0,
+            vendor_total
+        ))
+
     balance = total_amount - advance_paid
 
     conn.execute("""
@@ -515,6 +562,17 @@ def edit_rental(rental_id):
                 days,
                 days,
                 status,
+                rental_id
+            ))
+
+            conn.execute("""
+            UPDATE outside_items
+            SET days=?, total=rate_per_day * ?, balance=(rate_per_day * ?) - paid
+            WHERE rental_id=?
+            """, (
+                days,
+                days,
+                days,
                 rental_id
             ))
 
