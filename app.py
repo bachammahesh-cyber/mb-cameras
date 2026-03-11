@@ -140,6 +140,15 @@ def init_db():
         )
         """)
 
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS clients(
+            id BIGSERIAL PRIMARY KEY,
+            name TEXT,
+            phone TEXT,
+            address TEXT
+        )
+        """)
+
         rental_status_exists = conn.execute("""
         SELECT 1
         FROM information_schema.columns
@@ -226,6 +235,15 @@ def init_db():
             total REAL,
             paid REAL DEFAULT 0,
             balance REAL
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS clients(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            phone TEXT,
+            address TEXT
         )
         """)
 
@@ -386,11 +404,16 @@ def inventory():
         "SELECT * FROM items"
     ).fetchall()
 
+    clients = conn.execute(
+        "SELECT * FROM clients ORDER BY id DESC"
+    ).fetchall()
+
     conn.close()
 
     return render_template(
         "inventory.html",
         items=items,
+        clients=clients,
         role=session["role"]
     )
 
@@ -423,6 +446,33 @@ def add_item():
 
 
 # -----------------------
+# Add client
+# -----------------------
+
+@app.route("/add_client", methods=["POST"])
+def add_client():
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    name = request.form["name"]
+    phone = request.form["phone"]
+    address = request.form["address"]
+
+    conn = get_db()
+
+    conn.execute("""
+    INSERT INTO clients(name,phone,address)
+    VALUES(?,?,?)
+    """, (name, phone, address))
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/inventory")
+
+
+# -----------------------
 # New rental
 # -----------------------
 
@@ -438,11 +488,16 @@ def new_rental():
         "SELECT * FROM items"
     ).fetchall()
 
+    clients = conn.execute(
+        "SELECT * FROM clients ORDER BY name ASC, id DESC"
+    ).fetchall()
+
     conn.close()
 
     return render_template(
         "new_rental.html",
-        items=items
+        items=items,
+        clients=clients
     )
 
 
@@ -812,8 +867,16 @@ def edit_rental(rental_id):
 
         return redirect("/rental_records")
 
+    clients = conn.execute(
+        "SELECT * FROM clients ORDER BY name ASC, id DESC"
+    ).fetchall()
+
     conn.close()
-    return render_template("edit_rental.html", rental=rental)
+    return render_template(
+        "edit_rental.html",
+        rental=rental,
+        clients=clients
+    )
 
 
 @app.route("/delete_rental/<int:rental_id>", methods=["POST"])
