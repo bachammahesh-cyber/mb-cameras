@@ -228,6 +228,18 @@ box-sizing:border-box;
 background:white;
 }
 
+textarea{
+width:100%;
+padding:10px;
+margin-top:6px;
+border-radius:6px;
+border:1px solid #ddd;
+font-size:14px;
+box-sizing:border-box;
+resize:vertical;
+font-family:inherit;
+}
+
 /* ------------------------
 BUTTONS
 ------------------------ */
@@ -245,6 +257,13 @@ min-height:42px;
 
 button:hover{
 background:#1a68d1;
+}
+
+button:disabled{
+cursor:not-allowed;
+opacity:0.65;
+background:#cbd5e1;
+color:#475569;
 }
 
 /* ------------------------

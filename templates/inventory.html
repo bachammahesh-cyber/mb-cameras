@@ -72,6 +72,7 @@
 <th>Category</th>
 <th>Rent / Day</th>
 <th>Status</th>
+<th>Actions</th>
 </tr>
 </thead>
 
@@ -85,6 +86,18 @@
 <td>{{ item.category }}</td>
 <td>₹{{ item.rent_per_day }}</td>
 <td>{{ item.status }}</td>
+<td>
+<div class="table-actions">
+<a class="mini-btn mini-btn-edit" href="/edit_item/{{ item.id }}">Edit</a>
+{% if item.can_delete %}
+<form method="POST" action="/delete_item/{{ item.id }}" onsubmit="return confirm('Delete this equipment item?');">
+<button type="submit" class="mini-btn mini-btn-delete">Delete</button>
+</form>
+{% else %}
+<button type="button" class="mini-btn mini-btn-delete" disabled title="{{ item.delete_reason }}">Delete</button>
+{% endif %}
+</div>
+</td>
 </tr>
 
 {% endfor %}
@@ -108,6 +121,7 @@
 <th>Name</th>
 <th>Phone</th>
 <th>Address</th>
+<th>Actions</th>
 </tr>
 </thead>
 
@@ -120,6 +134,14 @@
 <td>{{ client.name }}</td>
 <td>{{ client.phone }}</td>
 <td>{{ client.address }}</td>
+<td>
+<div class="table-actions">
+<a class="mini-btn mini-btn-edit" href="/edit_client/{{ client.id }}">Edit</a>
+<form method="POST" action="/delete_client/{{ client.id }}" onsubmit="return confirm('Delete this client?');">
+<button type="submit" class="mini-btn mini-btn-delete">Delete</button>
+</form>
+</div>
+</td>
 </tr>
 
 {% endfor %}

@@ -400,15 +400,40 @@ def inventory():
 
     conn = get_db()
 
-    items = conn.execute(
-        "SELECT * FROM items"
+    item_rows = conn.execute(
+        "SELECT * FROM items ORDER BY id DESC"
     ).fetchall()
+
+    item_usage = {
+        row["item_id"]: row["usage_count"]
+        for row in conn.execute("""
+        SELECT item_id, COUNT(*) AS usage_count
+        FROM rental_items
+        GROUP BY item_id
+        """).fetchall()
+    }
 
     clients = conn.execute(
         "SELECT * FROM clients ORDER BY id DESC"
     ).fetchall()
 
     conn.close()
+
+    items = []
+    for row in item_rows:
+        usage_count = item_usage.get(row["id"], 0)
+        can_delete = row["status"] != "Rented" and usage_count == 0
+        delete_reason = ""
+        if row["status"] == "Rented":
+            delete_reason = "Item is currently rented."
+        elif usage_count > 0:
+            delete_reason = "Item has rental history and cannot be deleted."
+
+        items.append({
+            **dict(row),
+            "can_delete": can_delete,
+            "delete_reason": delete_reason
+        })
 
     return render_template(
         "inventory.html",
@@ -445,6 +470,73 @@ def add_item():
     return redirect("/inventory")
 
 
+@app.route("/edit_item/<int:item_id>", methods=["GET", "POST"])
+def edit_item(item_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+
+    item = conn.execute(
+        "SELECT * FROM items WHERE id=?",
+        (item_id,)
+    ).fetchone()
+
+    if not item:
+        conn.close()
+        return redirect("/inventory")
+
+    if request.method == "POST":
+        name = request.form["name"]
+        category = request.form["category"]
+        rent = request.form["rent"]
+
+        conn.execute("""
+        UPDATE items
+        SET name=?, category=?, rent_per_day=?
+        WHERE id=?
+        """, (name, category, rent, item_id))
+
+        conn.commit()
+        conn.close()
+        return redirect("/inventory")
+
+    conn.close()
+    return render_template("edit_item.html", item=item)
+
+
+@app.route("/delete_item/<int:item_id>", methods=["POST"])
+def delete_item(item_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    try:
+        item = conn.execute(
+            "SELECT status FROM items WHERE id=?",
+            (item_id,)
+        ).fetchone()
+        if not item:
+            return redirect("/inventory")
+
+        item_usage = conn.execute(
+            "SELECT COUNT(*) AS usage_count FROM rental_items WHERE item_id=?",
+            (item_id,)
+        ).fetchone()["usage_count"]
+
+        if item["status"] == "Rented" or item_usage > 0:
+            return redirect("/inventory")
+
+        conn.execute("DELETE FROM items WHERE id=?", (item_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+    return redirect("/inventory")
+
+
 # -----------------------
 # Add client
 # -----------------------
@@ -468,6 +560,58 @@ def add_client():
 
     conn.commit()
     conn.close()
+
+    return redirect("/inventory")
+
+
+@app.route("/edit_client/<int:client_id>", methods=["GET", "POST"])
+def edit_client(client_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+
+    client = conn.execute(
+        "SELECT * FROM clients WHERE id=?",
+        (client_id,)
+    ).fetchone()
+
+    if not client:
+        conn.close()
+        return redirect("/inventory")
+
+    if request.method == "POST":
+        name = request.form["name"]
+        phone = request.form["phone"]
+        address = request.form["address"]
+
+        conn.execute("""
+        UPDATE clients
+        SET name=?, phone=?, address=?
+        WHERE id=?
+        """, (name, phone, address, client_id))
+
+        conn.commit()
+        conn.close()
+        return redirect("/inventory")
+
+    conn.close()
+    return render_template("edit_client.html", client=client)
+
+
+@app.route("/delete_client/<int:client_id>", methods=["POST"])
+def delete_client(client_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM clients WHERE id=?", (client_id,))
+        conn.commit()
+    finally:
+        conn.close()
 
     return redirect("/inventory")
 
