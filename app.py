@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, redirect, session, send_from_directory
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -358,6 +358,33 @@ def login():
 @app.route("/healthz", methods=["GET", "HEAD"])
 def healthz():
     return "ok", 200
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(
+        app.static_folder,
+        "icon-192.png",
+        mimetype="image/png"
+    )
+
+
+@app.route("/apple-touch-icon.png")
+def apple_touch_icon():
+    return send_from_directory(
+        app.static_folder,
+        "apple-touch-icon.png",
+        mimetype="image/png"
+    )
+
+
+@app.route("/apple-touch-icon-precomposed.png")
+def apple_touch_icon_precomposed():
+    return send_from_directory(
+        app.static_folder,
+        "apple-touch-icon.png",
+        mimetype="image/png"
+    )
 
 
 # -----------------------
