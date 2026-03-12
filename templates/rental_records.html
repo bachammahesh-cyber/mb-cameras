@@ -31,6 +31,7 @@
 <th>ID</th>
 <th>Customer</th>
 <th>Phone</th>
+<th>Equipment</th>
 <th>Days</th>
 <th>Total</th>
 <th>Paid</th>
@@ -53,6 +54,22 @@
 <td>{{ r.id }}</td>
 <td>{{ r.customer_name }}</td>
 <td>{{ r.phone }}</td>
+<td>
+{% if r.equipment_names %}
+<select>
+<option selected disabled>
+{{ r.equipment_names|length }} item{% if r.equipment_names|length != 1 %}s{% endif %} rented
+</option>
+{% for item_name in r.equipment_names %}
+<option>{{ item_name }}</option>
+{% endfor %}
+</select>
+{% else %}
+<select>
+<option selected disabled>No items</option>
+</select>
+{% endif %}
+</td>
 
 <td>{{ r.rental_days }}</td>
 

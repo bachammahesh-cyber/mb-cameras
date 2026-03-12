@@ -821,7 +821,20 @@ def rental_records():
         "SELECT * FROM rentals ORDER BY id DESC"
     ).fetchall()
 
+    rental_item_rows = conn.execute("""
+    SELECT ri.rental_id, i.name, ri.rate_per_day
+    FROM rental_items ri
+    JOIN items i ON i.id = ri.item_id
+    ORDER BY ri.rental_id DESC, i.name ASC
+    """).fetchall()
+
     conn.close()
+
+    equipment_by_rental = {}
+    for row in rental_item_rows:
+        equipment_by_rental.setdefault(row["rental_id"], []).append(
+            f"{row['name']} - {row['rate_per_day']}"
+        )
 
     rentals = []
     for row in rental_rows:
@@ -842,6 +855,7 @@ def rental_records():
 
         rentals.append({
             **dict(row),
+            "equipment_names": equipment_by_rental.get(row["id"], []),
             "rental_days": rental_days,
             "given_date_display": given_date_display
         })
