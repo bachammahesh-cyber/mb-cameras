@@ -818,7 +818,7 @@ def rental_records():
     conn = get_db()
 
     rental_rows = conn.execute(
-        "SELECT * FROM rentals ORDER BY id DESC"
+        "SELECT * FROM rentals ORDER BY start_date DESC, id DESC"
     ).fetchall()
 
     rental_item_rows = conn.execute("""
@@ -1138,7 +1138,7 @@ def credit_report():
     conn = get_db()
 
     rentals = conn.execute(
-        f"SELECT * FROM rentals {rental_where_sql} ORDER BY id DESC",
+        f"SELECT * FROM rentals {rental_where_sql} ORDER BY start_date DESC, id DESC",
         tuple(rental_params)
     ).fetchall()
 
@@ -1161,7 +1161,7 @@ def credit_report():
         FROM outside_items oi
         JOIN rentals r ON r.id = oi.rental_id
         {vendor_where_sql}
-        ORDER BY oi.id DESC
+        ORDER BY r.start_date DESC, oi.id DESC
         """,
         tuple(vendor_params)
     ).fetchall()
