@@ -963,6 +963,14 @@ def edit_rental(rental_id):
                 (rental_id,)
             ).fetchall()
             previous_item_ids = [row["item_id"] for row in previous_item_rows]
+            previous_outside_rows = conn.execute("""
+            SELECT item_name, paid
+            FROM outside_items
+            WHERE rental_id=?
+            """, (rental_id,)).fetchall()
+            previous_outside_payments = {
+                row["item_name"]: row["paid"] or 0 for row in previous_outside_rows
+            }
 
             selected_item_ids = []
             for item_id_text in request.form.getlist("item_ids"):
@@ -981,6 +989,35 @@ def edit_rental(rental_id):
                     tuple(selected_item_ids)
                 ).fetchall()
                 item_lookup = {row["id"]: row for row in selected_items}
+
+            vendor_name = (
+                request.form.get("vendor_name", "").strip()
+                or next(
+                    (
+                        name.strip()
+                        for name in request.form.getlist("vendor_name[]")
+                        if name and name.strip()
+                    ),
+                    ""
+                )
+            )
+            vendor_item_ids = []
+            for item_id_text in request.form.getlist("vendor_item_ids"):
+                try:
+                    vendor_item_id = int(item_id_text)
+                except ValueError:
+                    continue
+                if vendor_item_id not in vendor_item_ids:
+                    vendor_item_ids.append(vendor_item_id)
+
+            vendor_item_lookup = {}
+            if vendor_item_ids:
+                vendor_placeholders = ",".join("?" for _ in vendor_item_ids)
+                vendor_items = conn.execute(
+                    f"SELECT id, name, rent_per_day FROM items WHERE id IN ({vendor_placeholders})",
+                    tuple(vendor_item_ids)
+                ).fetchall()
+                vendor_item_lookup = {row["id"]: row for row in vendor_items}
 
             conn.execute("""
             UPDATE rentals
@@ -1048,16 +1085,46 @@ def edit_rental(rental_id):
                     ("Rented" if status == "Active" else "Available", item_id)
                 )
 
-            conn.execute("""
-            UPDATE outside_items
-            SET days=?, total=rate_per_day * ?, balance=(rate_per_day * ?) - paid
-            WHERE rental_id=?
-            """, (
-                days,
-                days,
-                days,
-                rental_id
-            ))
+            conn.execute(
+                "DELETE FROM outside_items WHERE rental_id=?",
+                (rental_id,)
+            )
+
+            for vendor_item_id in vendor_item_ids:
+                item = vendor_item_lookup.get(vendor_item_id)
+                if not item:
+                    continue
+
+                rate_text = request.form.get(f"vendor_rates[{vendor_item_id}]", "").strip()
+                if rate_text:
+                    try:
+                        rate_per_day = float(rate_text)
+                    except ValueError:
+                        rate_per_day = item["rent_per_day"]
+                else:
+                    rate_per_day = item["rent_per_day"]
+
+                if rate_per_day <= 0:
+                    rate_per_day = item["rent_per_day"]
+
+                vendor_total = rate_per_day * days
+                paid = min(previous_outside_payments.get(item["name"], 0), vendor_total)
+                balance_due = vendor_total - paid
+
+                conn.execute("""
+                INSERT INTO outside_items
+                (rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
+                VALUES(?,?,?,?,?,?,?,?)
+                """, (
+                    rental_id,
+                    vendor_name,
+                    item["name"],
+                    rate_per_day,
+                    days,
+                    vendor_total,
+                    paid,
+                    balance_due
+                ))
 
             balance = total_amount - advance_paid
 
@@ -1082,10 +1149,28 @@ def edit_rental(rental_id):
     FROM rental_items
     WHERE rental_id=?
     """, (rental_id,)).fetchall()
+    current_outside_items = conn.execute("""
+    SELECT vendor_name, item_name, rate_per_day
+    FROM outside_items
+    WHERE rental_id=?
+    ORDER BY id ASC
+    """, (rental_id,)).fetchall()
 
     selected_item_ids = [row["item_id"] for row in current_rental_items]
     selected_rates = {
         row["item_id"]: row["rate_per_day"] for row in current_rental_items
+    }
+    outside_vendor_name = next(
+        (
+            (row["vendor_name"] or "").strip()
+            for row in current_outside_items
+            if row["vendor_name"] and row["vendor_name"].strip()
+        ),
+        ""
+    )
+    selected_vendor_item_names = [row["item_name"] for row in current_outside_items]
+    selected_vendor_rates = {
+        row["item_name"]: row["rate_per_day"] for row in current_outside_items
     }
 
     if selected_item_ids:
@@ -1107,14 +1192,24 @@ def edit_rental(rental_id):
         ORDER BY name ASC, id DESC
         """).fetchall()
 
+    vendor_items = conn.execute("""
+    SELECT id, name, rent_per_day
+    FROM items
+    ORDER BY name ASC, id DESC
+    """).fetchall()
+
     conn.close()
     return render_template(
         "edit_rental.html",
         rental=rental,
         clients=clients,
         items=items,
+        vendor_items=vendor_items,
         selected_item_ids=selected_item_ids,
-        selected_rates=selected_rates
+        selected_rates=selected_rates,
+        outside_vendor_name=outside_vendor_name,
+        selected_vendor_item_names=selected_vendor_item_names,
+        selected_vendor_rates=selected_vendor_rates
     )
 
 

@@ -107,6 +107,59 @@ value="{{ selected_rates.get(item['id'], item['rent_per_day']) }}"
 
 </div>
 
+</div>
+
+<div class="card">
+
+<h3>Outside Equipment (Vendor)</h3>
+
+<label>Vendor Name</label>
+<input type="text" name="vendor_name" value="{{ outside_vendor_name }}">
+
+<div class="equipment-grid">
+
+{% if vendor_items|length == 0 %}
+<p>No equipment found. Please <a href="/inventory">add items in Inventory</a>.</p>
+{% endif %}
+
+{% for item in vendor_items %}
+
+<label class="equipment-card">
+
+<input
+type="checkbox"
+name="vendor_item_ids"
+value="{{ item['id'] }}"
+{% if item['name'] in selected_vendor_item_names %}checked{% endif %}
+>
+
+<div class="equipment-info">
+
+<div class="equipment-title">
+{{ item['name'] }}
+</div>
+
+<div class="equipment-price">
+Inventory price: ₹{{ item['rent_per_day'] }} / day
+</div>
+
+</div>
+
+<input
+type="number"
+class="vendor-price"
+name="vendor_rates[{{ item['id'] }}]"
+placeholder="Price"
+step="0.01"
+value="{{ selected_vendor_rates.get(item['name'], item['rent_per_day']) }}"
+>
+
+</label>
+
+{% endfor %}
+
+</div>
+
 <div class="center">
 <button type="submit">Save Changes</button>
 </div>
