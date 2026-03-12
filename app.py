@@ -958,6 +958,30 @@ def edit_rental(rental_id):
             return redirect(f"/edit_rental/{rental_id}")
 
         try:
+            previous_item_rows = conn.execute(
+                "SELECT item_id FROM rental_items WHERE rental_id=?",
+                (rental_id,)
+            ).fetchall()
+            previous_item_ids = [row["item_id"] for row in previous_item_rows]
+
+            selected_item_ids = []
+            for item_id_text in request.form.getlist("item_ids"):
+                try:
+                    item_id = int(item_id_text)
+                except ValueError:
+                    continue
+                if item_id not in selected_item_ids:
+                    selected_item_ids.append(item_id)
+
+            item_lookup = {}
+            if selected_item_ids:
+                placeholders = ",".join("?" for _ in selected_item_ids)
+                selected_items = conn.execute(
+                    f"SELECT * FROM items WHERE id IN ({placeholders})",
+                    tuple(selected_item_ids)
+                ).fetchall()
+                item_lookup = {row["id"]: row for row in selected_items}
+
             conn.execute("""
             UPDATE rentals
             SET customer_name=?, phone=?, start_date=?, end_date=?, advance_paid=?, status=?
@@ -972,16 +996,57 @@ def edit_rental(rental_id):
                 rental_id
             ))
 
-            conn.execute("""
-            UPDATE rental_items
-            SET days=?, total=rate_per_day * ?, status=?
-            WHERE rental_id=?
-            """, (
-                days,
-                days,
-                status,
-                rental_id
-            ))
+            for item_id in previous_item_ids:
+                conn.execute(
+                    "UPDATE items SET status='Available' WHERE id=?",
+                    (item_id,)
+                )
+
+            conn.execute(
+                "DELETE FROM rental_items WHERE rental_id=?",
+                (rental_id,)
+            )
+
+            total_amount = 0
+            for item_id in selected_item_ids:
+                item = item_lookup.get(item_id)
+                if not item:
+                    continue
+                if item["status"] != "Available" and item_id not in previous_item_ids:
+                    continue
+
+                rate_text = request.form.get(f"item_rates[{item_id}]", "").strip()
+                if rate_text:
+                    try:
+                        rate_per_day = float(rate_text)
+                    except ValueError:
+                        rate_per_day = item["rent_per_day"]
+                else:
+                    rate_per_day = item["rent_per_day"]
+
+                if rate_per_day < 0:
+                    rate_per_day = item["rent_per_day"]
+
+                item_total = rate_per_day * days
+                total_amount += item_total
+
+                conn.execute("""
+                INSERT INTO rental_items
+                (rental_id,item_id,rate_per_day,days,total,status)
+                VALUES(?,?,?,?,?,?)
+                """, (
+                    rental_id,
+                    item_id,
+                    rate_per_day,
+                    days,
+                    item_total,
+                    status
+                ))
+
+                conn.execute(
+                    "UPDATE items SET status=? WHERE id=?",
+                    ("Rented" if status == "Active" else "Available", item_id)
+                )
 
             conn.execute("""
             UPDATE outside_items
@@ -994,12 +1059,6 @@ def edit_rental(rental_id):
                 rental_id
             ))
 
-            total_amount = conn.execute("""
-            SELECT COALESCE(SUM(total), 0) AS total_amount
-            FROM rental_items
-            WHERE rental_id=?
-            """, (rental_id,)).fetchone()["total_amount"]
-
             balance = total_amount - advance_paid
 
             conn.execute("""
@@ -1007,17 +1066,6 @@ def edit_rental(rental_id):
             SET total_amount=?, balance=?
             WHERE id=?
             """, (total_amount, balance, rental_id))
-
-            item_ids = conn.execute(
-                "SELECT item_id FROM rental_items WHERE rental_id=?",
-                (rental_id,)
-            ).fetchall()
-
-            for row in item_ids:
-                conn.execute(
-                    "UPDATE items SET status=? WHERE id=?",
-                    ("Rented" if status == "Active" else "Available", row["item_id"])
-                )
 
             conn.commit()
         finally:
@@ -1029,11 +1077,44 @@ def edit_rental(rental_id):
         "SELECT * FROM clients ORDER BY name ASC, id DESC"
     ).fetchall()
 
+    current_rental_items = conn.execute("""
+    SELECT item_id, rate_per_day
+    FROM rental_items
+    WHERE rental_id=?
+    """, (rental_id,)).fetchall()
+
+    selected_item_ids = [row["item_id"] for row in current_rental_items]
+    selected_rates = {
+        row["item_id"]: row["rate_per_day"] for row in current_rental_items
+    }
+
+    if selected_item_ids:
+        placeholders = ",".join("?" for _ in selected_item_ids)
+        items = conn.execute(
+            f"""
+            SELECT *
+            FROM items
+            WHERE status='Available' OR id IN ({placeholders})
+            ORDER BY name ASC, id DESC
+            """,
+            tuple(selected_item_ids)
+        ).fetchall()
+    else:
+        items = conn.execute("""
+        SELECT *
+        FROM items
+        WHERE status='Available'
+        ORDER BY name ASC, id DESC
+        """).fetchall()
+
     conn.close()
     return render_template(
         "edit_rental.html",
         rental=rental,
-        clients=clients
+        clients=clients,
+        items=items,
+        selected_item_ids=selected_item_ids,
+        selected_rates=selected_rates
     )
 
 

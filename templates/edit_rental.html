@@ -57,6 +57,56 @@ required
 <option value="Returned" {% if rental.status == "Returned" %}selected{% endif %}>Returned</option>
 </select>
 
+</div>
+
+<div class="card">
+
+<h3>Our Equipment</h3>
+
+<div class="equipment-grid">
+
+{% if items|length == 0 %}
+<p>No equipment available. Please <a href="/inventory">add items in Inventory</a>.</p>
+{% endif %}
+
+{% for item in items %}
+
+<label class="equipment-card">
+
+<input
+type="checkbox"
+name="item_ids"
+value="{{ item['id'] }}"
+{% if item['id'] in selected_item_ids %}checked{% endif %}
+>
+
+<div class="equipment-info">
+
+<div class="equipment-title">
+{{ item['name'] }}
+</div>
+
+<div class="equipment-price">
+Inventory price: ₹{{ item['rent_per_day'] }} / day
+</div>
+
+</div>
+
+<input
+type="number"
+class="vendor-price"
+name="item_rates[{{ item['id'] }}]"
+placeholder="Price"
+step="0.01"
+value="{{ selected_rates.get(item['id'], item['rent_per_day']) }}"
+>
+
+</label>
+
+{% endfor %}
+
+</div>
+
 <div class="center">
 <button type="submit">Save Changes</button>
 </div>
