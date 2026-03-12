@@ -1157,7 +1157,7 @@ def credit_report():
 
     vendor_rows = conn.execute(
         f"""
-        SELECT oi.*
+        SELECT oi.*, r.start_date
         FROM outside_items oi
         JOIN rentals r ON r.id = oi.rental_id
         {vendor_where_sql}
@@ -1177,6 +1177,7 @@ def credit_report():
         if key not in groups:
             groups[key] = {
                 "rental_id": row["rental_id"],
+                "start_date": row["start_date"],
                 "vendor_name_raw": vendor_name,
                 "vendor_name": vendor_name or "Outside Vendor",
                 "total": 0,
