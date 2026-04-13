@@ -12,7 +12,12 @@ except ImportError:
     dict_row = None
 
 app = Flask(__name__)
-app.secret_key = "super_secret_key_change_this"
+app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_this")
+
+PRIMARY_TENANT_ID = "mb_cameras"
+DEMO_TENANT_ID = "demo_rental_house"
+DEMO_USERNAME = "demo"
+DEMO_PASSWORD = "Demo@123"
 
 DEFAULT_DATABASE = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -38,6 +43,15 @@ if IS_RENDER and not USE_POSTGRES:
     raise RuntimeError(
         "Render deployment requires Neon Postgres. Set DATABASE_URL to your Neon connection string."
     )
+
+if IS_RENDER and not os.getenv("SECRET_KEY", "").strip():
+    raise RuntimeError(
+        "Render deployment requires SECRET_KEY. Set it to a long random string in Render environment variables."
+    )
+
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = IS_RENDER
 
 
 # -----------------------
@@ -73,6 +87,25 @@ def get_db():
     return conn
 
 
+def current_tenant_id():
+    return session.get("tenant_id", PRIMARY_TENANT_ID)
+
+
+def tenant_demo_data_exists(conn, tenant_id):
+    existing_item = conn.execute(
+        "SELECT id FROM items WHERE tenant_id=? LIMIT 1",
+        (tenant_id,)
+    ).fetchone()
+    if existing_item:
+        return True
+
+    existing_client = conn.execute(
+        "SELECT id FROM clients WHERE tenant_id=? LIMIT 1",
+        (tenant_id,)
+    ).fetchone()
+    return bool(existing_client)
+
+
 # -----------------------
 # Initialize database
 # -----------------------
@@ -86,13 +119,15 @@ def init_db():
             id BIGSERIAL PRIMARY KEY,
             username TEXT UNIQUE,
             password TEXT,
-            role TEXT
+            role TEXT,
+            tenant_id TEXT DEFAULT 'mb_cameras'
         )
         """)
 
         conn.execute("""
         CREATE TABLE IF NOT EXISTS items(
             id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             name TEXT,
             category TEXT,
             rent_per_day DOUBLE PRECISION,
@@ -103,6 +138,7 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS rentals(
             id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             customer_name TEXT,
             phone TEXT,
             start_date TEXT,
@@ -117,6 +153,7 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS rental_items(
             id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             rental_id BIGINT,
             item_id BIGINT,
             rate_per_day DOUBLE PRECISION,
@@ -129,6 +166,7 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS outside_items(
             id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             rental_id BIGINT,
             vendor_name TEXT,
             item_name TEXT,
@@ -143,11 +181,29 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS clients(
             id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             name TEXT,
             phone TEXT,
             address TEXT
         )
         """)
+
+        postgres_tenant_migrations = {
+            "users": "ALTER TABLE users ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "items": "ALTER TABLE items ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "rentals": "ALTER TABLE rentals ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "rental_items": "ALTER TABLE rental_items ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "outside_items": "ALTER TABLE outside_items ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "clients": "ALTER TABLE clients ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+        }
+        for table_name, statement in postgres_tenant_migrations.items():
+            tenant_exists = conn.execute("""
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_name=%s AND column_name='tenant_id'
+            """, (table_name,)).fetchone()
+            if not tenant_exists:
+                conn.execute(statement)
 
         rental_status_exists = conn.execute("""
         SELECT 1
@@ -184,13 +240,15 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE,
             password TEXT,
-            role TEXT
+            role TEXT,
+            tenant_id TEXT DEFAULT 'mb_cameras'
         )
         """)
 
         conn.execute("""
         CREATE TABLE IF NOT EXISTS items(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             name TEXT,
             category TEXT,
             rent_per_day REAL,
@@ -201,6 +259,7 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS rentals(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             customer_name TEXT,
             phone TEXT,
             start_date TEXT,
@@ -215,6 +274,7 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS rental_items(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             rental_id INTEGER,
             item_id INTEGER,
             rate_per_day REAL,
@@ -227,6 +287,7 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS outside_items(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             rental_id INTEGER,
             vendor_name TEXT,
             item_name TEXT,
@@ -241,11 +302,29 @@ def init_db():
         conn.execute("""
         CREATE TABLE IF NOT EXISTS clients(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id TEXT DEFAULT 'mb_cameras',
             name TEXT,
             phone TEXT,
             address TEXT
         )
         """)
+
+        sqlite_tenant_migrations = {
+            "users": "ALTER TABLE users ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "items": "ALTER TABLE items ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "rentals": "ALTER TABLE rentals ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "rental_items": "ALTER TABLE rental_items ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "outside_items": "ALTER TABLE outside_items ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+            "clients": "ALTER TABLE clients ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
+        }
+        for table_name, statement in sqlite_tenant_migrations.items():
+            table_cols = [
+                row["name"] for row in conn.execute(
+                    f"PRAGMA table_info({table_name})"
+                ).fetchall()
+            ]
+            if "tenant_id" not in table_cols:
+                conn.execute(statement)
 
         # Backward-compatible migration for older SQLite DB files.
         rental_cols = [
@@ -277,6 +356,46 @@ def init_db():
     SET balance = COALESCE(balance, total - COALESCE(paid, 0))
     """)
 
+    conn.execute("""
+    UPDATE users
+    SET tenant_id = COALESCE(NULLIF(tenant_id, ''), ?)
+    """, (PRIMARY_TENANT_ID,))
+
+    conn.execute("""
+    UPDATE users
+    SET tenant_id = ?
+    WHERE username = ?
+    """, (DEMO_TENANT_ID, DEMO_USERNAME))
+
+    conn.execute("""
+    UPDATE items
+    SET tenant_id = COALESCE(NULLIF(tenant_id, ''), ?)
+    """, (PRIMARY_TENANT_ID,))
+
+    conn.execute("""
+    UPDATE rentals
+    SET tenant_id = COALESCE(NULLIF(tenant_id, ''), ?)
+    """, (PRIMARY_TENANT_ID,))
+
+    conn.execute("""
+    UPDATE rental_items
+    SET tenant_id = COALESCE(NULLIF(tenant_id, ''), (
+        SELECT tenant_id FROM rentals WHERE rentals.id = rental_items.rental_id
+    ), ?)
+    """, (PRIMARY_TENANT_ID,))
+
+    conn.execute("""
+    UPDATE outside_items
+    SET tenant_id = COALESCE(NULLIF(tenant_id, ''), (
+        SELECT tenant_id FROM rentals WHERE rentals.id = outside_items.rental_id
+    ), ?)
+    """, (PRIMARY_TENANT_ID,))
+
+    conn.execute("""
+    UPDATE clients
+    SET tenant_id = COALESCE(NULLIF(tenant_id, ''), ?)
+    """, (PRIMARY_TENANT_ID,))
+
     conn.commit()
     conn.close()
 
@@ -286,23 +405,141 @@ def seed_default_users():
     conn = get_db()
 
     defaults = [
-        ("maheshbacham", "aA@9440984550", "owner"),
-        ("gopi", "9515369042", "manager")
+        ("maheshbacham", "aA@9440984550", "owner", PRIMARY_TENANT_ID),
+        ("gopi", "9515369042", "manager", PRIMARY_TENANT_ID),
+        (DEMO_USERNAME, DEMO_PASSWORD, "owner", DEMO_TENANT_ID)
     ]
 
-    for username, raw_password, role in defaults:
+    for username, raw_password, role, tenant_id in defaults:
         password = generate_password_hash(raw_password)
 
         conn.execute("""
-        INSERT INTO users(username,password,role)
-        VALUES(?,?,?)
+        INSERT INTO users(username,password,role,tenant_id)
+        VALUES(?,?,?,?)
         ON CONFLICT(username) DO UPDATE SET
             password=excluded.password,
-            role=excluded.role
-        """, (username, password, role))
+            role=excluded.role,
+            tenant_id=excluded.tenant_id
+        """, (username, password, role, tenant_id))
 
     conn.commit()
     conn.close()
+
+
+def seed_demo_data():
+
+    conn = get_db()
+    try:
+        if tenant_demo_data_exists(conn, DEMO_TENANT_ID):
+            return
+
+        demo_clients = [
+            ("Sunrise Studios", "9000000001", "Banjara Hills, Hyderabad"),
+            ("Frame & Focus", "9000000002", "Jubilee Hills, Hyderabad"),
+        ]
+        for name, phone, address in demo_clients:
+            conn.execute("""
+            INSERT INTO clients(tenant_id,name,phone,address)
+            VALUES(?,?,?,?)
+            """, (DEMO_TENANT_ID, name, phone, address))
+
+        demo_items = [
+            ("Sony FX3 Body", "Camera", 5500, "Rented"),
+            ("Sony 24-70 GM II", "Lens", 2200, "Rented"),
+            ("Aputure 300D", "Light", 1800, "Available"),
+            ("DJI RS 3", "Gimbal", 1600, "Available"),
+        ]
+        item_ids = {}
+        for name, category, rent_per_day, status in demo_items:
+            if USE_POSTGRES:
+                item_id = conn.execute("""
+                INSERT INTO items(tenant_id,name,category,rent_per_day,status)
+                VALUES(?,?,?,?,?)
+                RETURNING id
+                """, (DEMO_TENANT_ID, name, category, rent_per_day, status)).fetchone()["id"]
+            else:
+                conn.execute("""
+                INSERT INTO items(tenant_id,name,category,rent_per_day,status)
+                VALUES(?,?,?,?,?)
+                """, (DEMO_TENANT_ID, name, category, rent_per_day, status))
+                item_id = conn.execute(
+                    "SELECT last_insert_rowid() AS id"
+                ).fetchone()["id"]
+            item_ids[name] = item_id
+
+        if USE_POSTGRES:
+            rental_id = conn.execute("""
+            INSERT INTO rentals
+            (tenant_id,customer_name,phone,start_date,end_date,total_amount,advance_paid,balance,status)
+            VALUES(?,?,?,?,?,?,?,?,?)
+            RETURNING id
+            """, (
+                DEMO_TENANT_ID,
+                "Sunrise Studios",
+                "9000000001",
+                "2026-04-10",
+                "2026-04-12",
+                23100,
+                15000,
+                8100,
+                "Active"
+            )).fetchone()["id"]
+        else:
+            conn.execute("""
+            INSERT INTO rentals
+            (tenant_id,customer_name,phone,start_date,end_date,total_amount,advance_paid,balance,status)
+            VALUES(?,?,?,?,?,?,?,?,?)
+            """, (
+                DEMO_TENANT_ID,
+                "Sunrise Studios",
+                "9000000001",
+                "2026-04-10",
+                "2026-04-12",
+                23100,
+                15000,
+                8100,
+                "Active"
+            ))
+            rental_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+
+        demo_rental_items = [
+            (item_ids["Sony FX3 Body"], 5500, 3, 16500, "Active"),
+            (item_ids["Sony 24-70 GM II"], 2200, 3, 6600, "Active"),
+        ]
+        for item_id, rate_per_day, days, total, status in demo_rental_items:
+            conn.execute("""
+            INSERT INTO rental_items
+            (tenant_id,rental_id,item_id,rate_per_day,days,total,status)
+            VALUES(?,?,?,?,?,?,?)
+            """, (
+                DEMO_TENANT_ID,
+                rental_id,
+                item_id,
+                rate_per_day,
+                days,
+                total,
+                status
+            ))
+
+        conn.execute("""
+        INSERT INTO outside_items
+        (tenant_id,rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
+        VALUES(?,?,?,?,?,?,?,?,?)
+        """, (
+            DEMO_TENANT_ID,
+            rental_id,
+            "Demo Lights Vendor",
+            "Nanlite Forza 300",
+            1200,
+            3,
+            3600,
+            1000,
+            2600
+        ))
+
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def ensure_db_ready():
@@ -311,6 +548,7 @@ def ensure_db_ready():
         return
     init_db()
     seed_default_users()
+    seed_demo_data()
     DB_READY = True
 
 
@@ -347,12 +585,17 @@ def login():
             session["user_id"] = user["id"]
             session["username"] = user["username"]
             session["role"] = user["role"]
+            session["tenant_id"] = user["tenant_id"] or PRIMARY_TENANT_ID
 
             return redirect("/dashboard")
 
         return "Invalid login"
 
-    return render_template("login.html")
+    return render_template(
+        "login.html",
+        demo_username=DEMO_USERNAME,
+        demo_password=DEMO_PASSWORD
+    )
 
 
 @app.route("/healthz", methods=["GET", "HEAD"])
@@ -400,7 +643,9 @@ def dashboard():
     return render_template(
         "dashboard.html",
         username=session["username"],
-        role=session["role"]
+        role=session["role"],
+        tenant_id=current_tenant_id(),
+        demo_tenant_id=DEMO_TENANT_ID
     )
 
 
@@ -425,10 +670,12 @@ def inventory():
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
 
     item_rows = conn.execute(
-        "SELECT * FROM items ORDER BY id DESC"
+        "SELECT * FROM items WHERE tenant_id=? ORDER BY id DESC",
+        (tenant_id,)
     ).fetchall()
 
     item_usage = {
@@ -436,12 +683,14 @@ def inventory():
         for row in conn.execute("""
         SELECT item_id, COUNT(*) AS usage_count
         FROM rental_items
+        WHERE tenant_id=?
         GROUP BY item_id
-        """).fetchall()
+        """, (tenant_id,)).fetchall()
     }
 
     clients = conn.execute(
-        "SELECT * FROM clients ORDER BY id DESC"
+        "SELECT * FROM clients WHERE tenant_id=? ORDER BY id DESC",
+        (tenant_id,)
     ).fetchall()
 
     conn.close()
@@ -483,13 +732,14 @@ def add_item():
     name = request.form["name"]
     category = request.form["category"]
     rent = request.form["rent"]
+    tenant_id = current_tenant_id()
 
     conn = get_db()
 
     conn.execute("""
-    INSERT INTO items(name,category,rent_per_day,status)
-    VALUES(?,?,?,?)
-    """, (name, category, rent, "Available"))
+    INSERT INTO items(tenant_id,name,category,rent_per_day,status)
+    VALUES(?,?,?,?,?)
+    """, (tenant_id, name, category, rent, "Available"))
 
     conn.commit()
     conn.close()
@@ -503,11 +753,12 @@ def edit_item(item_id):
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
 
     item = conn.execute(
-        "SELECT * FROM items WHERE id=?",
-        (item_id,)
+        "SELECT * FROM items WHERE id=? AND tenant_id=?",
+        (item_id, tenant_id)
     ).fetchone()
 
     if not item:
@@ -522,8 +773,8 @@ def edit_item(item_id):
         conn.execute("""
         UPDATE items
         SET name=?, category=?, rent_per_day=?
-        WHERE id=?
-        """, (name, category, rent, item_id))
+        WHERE id=? AND tenant_id=?
+        """, (name, category, rent, item_id, tenant_id))
 
         conn.commit()
         conn.close()
@@ -539,24 +790,28 @@ def delete_item(item_id):
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
     try:
         item = conn.execute(
-            "SELECT status FROM items WHERE id=?",
-            (item_id,)
+            "SELECT status FROM items WHERE id=? AND tenant_id=?",
+            (item_id, tenant_id)
         ).fetchone()
         if not item:
             return redirect("/inventory")
 
         item_usage = conn.execute(
-            "SELECT COUNT(*) AS usage_count FROM rental_items WHERE item_id=?",
-            (item_id,)
+            "SELECT COUNT(*) AS usage_count FROM rental_items WHERE item_id=? AND tenant_id=?",
+            (item_id, tenant_id)
         ).fetchone()["usage_count"]
 
         if item["status"] == "Rented" or item_usage > 0:
             return redirect("/inventory")
 
-        conn.execute("DELETE FROM items WHERE id=?", (item_id,))
+        conn.execute(
+            "DELETE FROM items WHERE id=? AND tenant_id=?",
+            (item_id, tenant_id)
+        )
         conn.commit()
     finally:
         conn.close()
@@ -577,13 +832,14 @@ def add_client():
     name = request.form["name"]
     phone = request.form["phone"]
     address = request.form["address"]
+    tenant_id = current_tenant_id()
 
     conn = get_db()
 
     conn.execute("""
-    INSERT INTO clients(name,phone,address)
-    VALUES(?,?,?)
-    """, (name, phone, address))
+    INSERT INTO clients(tenant_id,name,phone,address)
+    VALUES(?,?,?,?)
+    """, (tenant_id, name, phone, address))
 
     conn.commit()
     conn.close()
@@ -597,11 +853,12 @@ def edit_client(client_id):
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
 
     client = conn.execute(
-        "SELECT * FROM clients WHERE id=?",
-        (client_id,)
+        "SELECT * FROM clients WHERE id=? AND tenant_id=?",
+        (client_id, tenant_id)
     ).fetchone()
 
     if not client:
@@ -616,8 +873,8 @@ def edit_client(client_id):
         conn.execute("""
         UPDATE clients
         SET name=?, phone=?, address=?
-        WHERE id=?
-        """, (name, phone, address, client_id))
+        WHERE id=? AND tenant_id=?
+        """, (name, phone, address, client_id, tenant_id))
 
         conn.commit()
         conn.close()
@@ -633,9 +890,13 @@ def delete_client(client_id):
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
     try:
-        conn.execute("DELETE FROM clients WHERE id=?", (client_id,))
+        conn.execute(
+            "DELETE FROM clients WHERE id=? AND tenant_id=?",
+            (client_id, tenant_id)
+        )
         conn.commit()
     finally:
         conn.close()
@@ -653,14 +914,17 @@ def new_rental():
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
 
     items = conn.execute(
-        "SELECT * FROM items"
+        "SELECT * FROM items WHERE tenant_id=?",
+        (tenant_id,)
     ).fetchall()
 
     clients = conn.execute(
-        "SELECT * FROM clients ORDER BY name ASC, id DESC"
+        "SELECT * FROM clients WHERE tenant_id=? ORDER BY name ASC, id DESC",
+        (tenant_id,)
     ).fetchall()
 
     conn.close()
@@ -692,17 +956,19 @@ def save_rental():
     d2 = datetime.strptime(end_date, "%Y-%m-%d")
 
     days = (d2 - d1).days + 1
+    tenant_id = current_tenant_id()
 
     conn = get_db()
 
     if USE_POSTGRES:
         rental_id = conn.execute("""
         INSERT INTO rentals
-        (customer_name,phone,start_date,end_date,
+        (tenant_id,customer_name,phone,start_date,end_date,
         total_amount,advance_paid,balance,status)
-        VALUES(?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?)
         RETURNING id
         """, (
+            tenant_id,
             customer_name,
             phone,
             start_date,
@@ -715,10 +981,11 @@ def save_rental():
     else:
         conn.execute("""
         INSERT INTO rentals
-        (customer_name,phone,start_date,end_date,
+        (tenant_id,customer_name,phone,start_date,end_date,
         total_amount,advance_paid,balance,status)
-        VALUES(?,?,?,?,?,?,?,?)
+        VALUES(?,?,?,?,?,?,?,?,?)
         """, (
+            tenant_id,
             customer_name,
             phone,
             start_date,
@@ -737,9 +1004,11 @@ def save_rental():
     for item_id in item_ids:
 
         item = conn.execute(
-            "SELECT * FROM items WHERE id=?",
-            (item_id,)
+            "SELECT * FROM items WHERE id=? AND tenant_id=?",
+            (item_id, tenant_id)
         ).fetchone()
+        if not item:
+            continue
 
         item_total = days * item["rent_per_day"]
 
@@ -747,9 +1016,10 @@ def save_rental():
 
         conn.execute("""
         INSERT INTO rental_items
-        (rental_id,item_id,rate_per_day,days,total,status)
-        VALUES(?,?,?,?,?,?)
+        (tenant_id,rental_id,item_id,rate_per_day,days,total,status)
+        VALUES(?,?,?,?,?,?,?)
         """, (
+            tenant_id,
             rental_id,
             item_id,
             item["rent_per_day"],
@@ -759,8 +1029,8 @@ def save_rental():
         ))
 
         conn.execute(
-            "UPDATE items SET status='Rented' WHERE id=?",
-            (item_id,)
+            "UPDATE items SET status='Rented' WHERE id=? AND tenant_id=?",
+            (item_id, tenant_id)
         )
 
     # Persist selected outside equipment as vendor dues.
@@ -784,8 +1054,8 @@ def save_rental():
             continue
 
         item = conn.execute(
-            "SELECT name, rent_per_day FROM items WHERE id=?",
-            (vendor_item_id,)
+            "SELECT name, rent_per_day FROM items WHERE id=? AND tenant_id=?",
+            (vendor_item_id, tenant_id)
         ).fetchone()
         if not item:
             continue
@@ -805,9 +1075,10 @@ def save_rental():
 
         conn.execute("""
         INSERT INTO outside_items
-        (rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
-        VALUES(?,?,?,?,?,?,?,?)
+        (tenant_id,rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
+        VALUES(?,?,?,?,?,?,?,?,?)
         """, (
+            tenant_id,
             rental_id,
             vendor_name,
             item["name"],
@@ -823,8 +1094,8 @@ def save_rental():
     conn.execute("""
     UPDATE rentals
     SET total_amount=?, balance=?
-    WHERE id=?
-    """, (total_amount, balance, rental_id))
+    WHERE id=? AND tenant_id=?
+    """, (total_amount, balance, rental_id, tenant_id))
 
     conn.commit()
     conn.close()
@@ -842,18 +1113,21 @@ def rental_records():
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
 
     rental_rows = conn.execute(
-        "SELECT * FROM rentals ORDER BY start_date DESC, id DESC"
+        "SELECT * FROM rentals WHERE tenant_id=? ORDER BY start_date DESC, id DESC",
+        (tenant_id,)
     ).fetchall()
 
     rental_item_rows = conn.execute("""
     SELECT ri.rental_id, i.name, ri.rate_per_day
     FROM rental_items ri
     JOIN items i ON i.id = ri.item_id
+    WHERE ri.tenant_id=?
     ORDER BY ri.rental_id DESC, i.name ASC
-    """).fetchall()
+    """, (tenant_id,)).fetchall()
 
     conn.close()
 
@@ -900,11 +1174,12 @@ def toggle_rental_status(rental_id):
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
     try:
         rental = conn.execute(
-            "SELECT status FROM rentals WHERE id=?",
-            (rental_id,)
+            "SELECT status FROM rentals WHERE id=? AND tenant_id=?",
+            (rental_id, tenant_id)
         ).fetchone()
 
         if not rental:
@@ -917,27 +1192,28 @@ def toggle_rental_status(rental_id):
         new_status = "Returned"
 
         conn.execute(
-            "UPDATE rentals SET status=? WHERE id=?",
-            (new_status, rental_id)
+            "UPDATE rentals SET status=? WHERE id=? AND tenant_id=?",
+            (new_status, rental_id, tenant_id)
         )
 
         item_ids = conn.execute(
-            "SELECT item_id FROM rental_items WHERE rental_id=?",
-            (rental_id,)
+            "SELECT item_id FROM rental_items WHERE rental_id=? AND tenant_id=?",
+            (rental_id, tenant_id)
         ).fetchall()
 
         for row in item_ids:
             conn.execute(
-                "UPDATE items SET status=? WHERE id=?",
+                "UPDATE items SET status=? WHERE id=? AND tenant_id=?",
                 (
                     "Available",
-                    row["item_id"]
+                    row["item_id"],
+                    tenant_id
                 )
             )
 
         conn.execute(
-            "UPDATE rental_items SET status=? WHERE rental_id=?",
-            (new_status, rental_id)
+            "UPDATE rental_items SET status=? WHERE rental_id=? AND tenant_id=?",
+            (new_status, rental_id, tenant_id)
         )
 
         conn.commit()
@@ -956,11 +1232,12 @@ def edit_rental(rental_id):
     if session.get("role") != "owner":
         return redirect("/rental_records")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
 
     rental = conn.execute(
-        "SELECT * FROM rentals WHERE id=?",
-        (rental_id,)
+        "SELECT * FROM rentals WHERE id=? AND tenant_id=?",
+        (rental_id, tenant_id)
     ).fetchone()
 
     if not rental:
@@ -986,15 +1263,15 @@ def edit_rental(rental_id):
 
         try:
             previous_item_rows = conn.execute(
-                "SELECT item_id FROM rental_items WHERE rental_id=?",
-                (rental_id,)
+                "SELECT item_id FROM rental_items WHERE rental_id=? AND tenant_id=?",
+                (rental_id, tenant_id)
             ).fetchall()
             previous_item_ids = [row["item_id"] for row in previous_item_rows]
             previous_outside_rows = conn.execute("""
             SELECT item_name, paid
             FROM outside_items
-            WHERE rental_id=?
-            """, (rental_id,)).fetchall()
+            WHERE rental_id=? AND tenant_id=?
+            """, (rental_id, tenant_id)).fetchall()
             previous_outside_payments = {
                 row["item_name"]: row["paid"] or 0 for row in previous_outside_rows
             }
@@ -1012,8 +1289,8 @@ def edit_rental(rental_id):
             if selected_item_ids:
                 placeholders = ",".join("?" for _ in selected_item_ids)
                 selected_items = conn.execute(
-                    f"SELECT * FROM items WHERE id IN ({placeholders})",
-                    tuple(selected_item_ids)
+                    f"SELECT * FROM items WHERE tenant_id=? AND id IN ({placeholders})",
+                    (tenant_id, *selected_item_ids)
                 ).fetchall()
                 item_lookup = {row["id"]: row for row in selected_items}
 
@@ -1041,15 +1318,15 @@ def edit_rental(rental_id):
             if vendor_item_ids:
                 vendor_placeholders = ",".join("?" for _ in vendor_item_ids)
                 vendor_items = conn.execute(
-                    f"SELECT id, name, rent_per_day FROM items WHERE id IN ({vendor_placeholders})",
-                    tuple(vendor_item_ids)
+                    f"SELECT id, name, rent_per_day FROM items WHERE tenant_id=? AND id IN ({vendor_placeholders})",
+                    (tenant_id, *vendor_item_ids)
                 ).fetchall()
                 vendor_item_lookup = {row["id"]: row for row in vendor_items}
 
             conn.execute("""
             UPDATE rentals
             SET customer_name=?, phone=?, start_date=?, end_date=?, advance_paid=?, status=?
-            WHERE id=?
+            WHERE id=? AND tenant_id=?
             """, (
                 customer_name,
                 phone,
@@ -1057,18 +1334,19 @@ def edit_rental(rental_id):
                 end_date,
                 advance_paid,
                 status,
-                rental_id
+                rental_id,
+                tenant_id
             ))
 
             for item_id in previous_item_ids:
                 conn.execute(
-                    "UPDATE items SET status='Available' WHERE id=?",
-                    (item_id,)
+                    "UPDATE items SET status='Available' WHERE id=? AND tenant_id=?",
+                    (item_id, tenant_id)
                 )
 
             conn.execute(
-                "DELETE FROM rental_items WHERE rental_id=?",
-                (rental_id,)
+                "DELETE FROM rental_items WHERE rental_id=? AND tenant_id=?",
+                (rental_id, tenant_id)
             )
 
             total_amount = 0
@@ -1096,9 +1374,10 @@ def edit_rental(rental_id):
 
                 conn.execute("""
                 INSERT INTO rental_items
-                (rental_id,item_id,rate_per_day,days,total,status)
-                VALUES(?,?,?,?,?,?)
+                (tenant_id,rental_id,item_id,rate_per_day,days,total,status)
+                VALUES(?,?,?,?,?,?,?)
                 """, (
+                    tenant_id,
                     rental_id,
                     item_id,
                     rate_per_day,
@@ -1108,13 +1387,13 @@ def edit_rental(rental_id):
                 ))
 
                 conn.execute(
-                    "UPDATE items SET status=? WHERE id=?",
-                    ("Rented" if status == "Active" else "Available", item_id)
+                    "UPDATE items SET status=? WHERE id=? AND tenant_id=?",
+                    ("Rented" if status == "Active" else "Available", item_id, tenant_id)
                 )
 
             conn.execute(
-                "DELETE FROM outside_items WHERE rental_id=?",
-                (rental_id,)
+                "DELETE FROM outside_items WHERE rental_id=? AND tenant_id=?",
+                (rental_id, tenant_id)
             )
 
             for vendor_item_id in vendor_item_ids:
@@ -1140,9 +1419,10 @@ def edit_rental(rental_id):
 
                 conn.execute("""
                 INSERT INTO outside_items
-                (rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
-                VALUES(?,?,?,?,?,?,?,?)
+                (tenant_id,rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
+                VALUES(?,?,?,?,?,?,?,?,?)
                 """, (
+                    tenant_id,
                     rental_id,
                     vendor_name,
                     item["name"],
@@ -1158,8 +1438,8 @@ def edit_rental(rental_id):
             conn.execute("""
             UPDATE rentals
             SET total_amount=?, balance=?
-            WHERE id=?
-            """, (total_amount, balance, rental_id))
+            WHERE id=? AND tenant_id=?
+            """, (total_amount, balance, rental_id, tenant_id))
 
             conn.commit()
         finally:
@@ -1168,20 +1448,21 @@ def edit_rental(rental_id):
         return redirect("/rental_records")
 
     clients = conn.execute(
-        "SELECT * FROM clients ORDER BY name ASC, id DESC"
+        "SELECT * FROM clients WHERE tenant_id=? ORDER BY name ASC, id DESC",
+        (tenant_id,)
     ).fetchall()
 
     current_rental_items = conn.execute("""
     SELECT item_id, rate_per_day
     FROM rental_items
-    WHERE rental_id=?
-    """, (rental_id,)).fetchall()
+    WHERE rental_id=? AND tenant_id=?
+    """, (rental_id, tenant_id)).fetchall()
     current_outside_items = conn.execute("""
     SELECT vendor_name, item_name, rate_per_day
     FROM outside_items
-    WHERE rental_id=?
+    WHERE rental_id=? AND tenant_id=?
     ORDER BY id ASC
-    """, (rental_id,)).fetchall()
+    """, (rental_id, tenant_id)).fetchall()
 
     selected_item_ids = [row["item_id"] for row in current_rental_items]
     selected_rates = {
@@ -1206,24 +1487,25 @@ def edit_rental(rental_id):
             f"""
             SELECT *
             FROM items
-            WHERE status='Available' OR id IN ({placeholders})
+            WHERE tenant_id=? AND (status='Available' OR id IN ({placeholders}))
             ORDER BY name ASC, id DESC
             """,
-            tuple(selected_item_ids)
+            (tenant_id, *selected_item_ids)
         ).fetchall()
     else:
         items = conn.execute("""
         SELECT *
         FROM items
-        WHERE status='Available'
+        WHERE tenant_id=? AND status='Available'
         ORDER BY name ASC, id DESC
-        """).fetchall()
+        """, (tenant_id,)).fetchall()
 
     vendor_items = conn.execute("""
     SELECT id, name, rent_per_day
     FROM items
+    WHERE tenant_id=?
     ORDER BY name ASC, id DESC
-    """).fetchall()
+    """, (tenant_id,)).fetchall()
 
     conn.close()
     return render_template(
@@ -1249,22 +1531,32 @@ def delete_rental(rental_id):
     if session.get("role") != "owner":
         return redirect("/rental_records")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
     try:
         item_ids = conn.execute(
-            "SELECT item_id FROM rental_items WHERE rental_id=?",
-            (rental_id,)
+            "SELECT item_id FROM rental_items WHERE rental_id=? AND tenant_id=?",
+            (rental_id, tenant_id)
         ).fetchall()
 
         for row in item_ids:
             conn.execute(
-                "UPDATE items SET status='Available' WHERE id=?",
-                (row["item_id"],)
+                "UPDATE items SET status='Available' WHERE id=? AND tenant_id=?",
+                (row["item_id"], tenant_id)
             )
 
-        conn.execute("DELETE FROM rental_items WHERE rental_id=?", (rental_id,))
-        conn.execute("DELETE FROM outside_items WHERE rental_id=?", (rental_id,))
-        conn.execute("DELETE FROM rentals WHERE id=?", (rental_id,))
+        conn.execute(
+            "DELETE FROM rental_items WHERE rental_id=? AND tenant_id=?",
+            (rental_id, tenant_id)
+        )
+        conn.execute(
+            "DELETE FROM outside_items WHERE rental_id=? AND tenant_id=?",
+            (rental_id, tenant_id)
+        )
+        conn.execute(
+            "DELETE FROM rentals WHERE id=? AND tenant_id=?",
+            (rental_id, tenant_id)
+        )
         conn.commit()
     finally:
         conn.close()
@@ -1326,7 +1618,7 @@ def credit_report():
         period_label = f"Up to {to_date}"
 
     rental_where = []
-    rental_params = []
+    rental_params = [current_tenant_id()]
     if from_date:
         rental_where.append("start_date >= ?")
         rental_params.append(from_date)
@@ -1334,9 +1626,9 @@ def credit_report():
         rental_where.append("start_date <= ?")
         rental_params.append(to_date)
 
-    rental_where_sql = ""
+    rental_where_sql = "WHERE tenant_id=?"
     if rental_where:
-        rental_where_sql = "WHERE " + " AND ".join(rental_where)
+        rental_where_sql += " AND " + " AND ".join(rental_where)
 
     conn = get_db()
 
@@ -1346,7 +1638,7 @@ def credit_report():
     ).fetchall()
 
     vendor_where = []
-    vendor_params = []
+    vendor_params = [current_tenant_id()]
     if from_date:
         vendor_where.append("r.start_date >= ?")
         vendor_params.append(from_date)
@@ -1354,9 +1646,9 @@ def credit_report():
         vendor_where.append("r.start_date <= ?")
         vendor_params.append(to_date)
 
-    vendor_where_sql = ""
+    vendor_where_sql = "WHERE oi.tenant_id=?"
     if vendor_where:
-        vendor_where_sql = "WHERE " + " AND ".join(vendor_where)
+        vendor_where_sql += " AND " + " AND ".join(vendor_where)
 
     vendor_rows = conn.execute(
         f"""
@@ -1454,11 +1746,12 @@ def add_payment(rental_id):
     if payment <= 0:
         return redirect("/credit_report")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
     try:
         rental = conn.execute(
-            "SELECT total_amount, advance_paid FROM rentals WHERE id=?",
-            (rental_id,)
+            "SELECT total_amount, advance_paid FROM rentals WHERE id=? AND tenant_id=?",
+            (rental_id, tenant_id)
         ).fetchone()
 
         if not rental:
@@ -1468,8 +1761,8 @@ def add_payment(rental_id):
         balance = rental["total_amount"] - updated_paid
 
         conn.execute(
-            "UPDATE rentals SET advance_paid=?, balance=? WHERE id=?",
-            (updated_paid, balance, rental_id)
+            "UPDATE rentals SET advance_paid=?, balance=? WHERE id=? AND tenant_id=?",
+            (updated_paid, balance, rental_id, tenant_id)
         )
         conn.commit()
     finally:
@@ -1493,11 +1786,12 @@ def pay_vendor(vendor_id):
     if payment <= 0:
         return redirect("/credit_report")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
     try:
         vendor = conn.execute(
-            "SELECT total, paid FROM outside_items WHERE id=?",
-            (vendor_id,)
+            "SELECT total, paid FROM outside_items WHERE id=? AND tenant_id=?",
+            (vendor_id, tenant_id)
         ).fetchone()
 
         if not vendor:
@@ -1507,8 +1801,8 @@ def pay_vendor(vendor_id):
         balance = vendor["total"] - updated_paid
 
         conn.execute(
-            "UPDATE outside_items SET paid=?, balance=? WHERE id=?",
-            (updated_paid, balance, vendor_id)
+            "UPDATE outside_items SET paid=?, balance=? WHERE id=? AND tenant_id=?",
+            (updated_paid, balance, vendor_id, tenant_id)
         )
         conn.commit()
     finally:
@@ -1533,14 +1827,15 @@ def pay_vendor_group(rental_id):
     if payment <= 0:
         return redirect("/credit_report")
 
+    tenant_id = current_tenant_id()
     conn = get_db()
     try:
         vendor_rows = conn.execute("""
         SELECT id,total,COALESCE(paid,0) AS paid,COALESCE(balance,total-COALESCE(paid,0)) AS balance
         FROM outside_items
-        WHERE rental_id=? AND COALESCE(vendor_name,'')=?
+        WHERE rental_id=? AND tenant_id=? AND COALESCE(vendor_name,'')=?
         ORDER BY id ASC
-        """, (rental_id, vendor_name)).fetchall()
+        """, (rental_id, tenant_id, vendor_name)).fetchall()
 
         if not vendor_rows:
             return redirect("/credit_report")
@@ -1559,8 +1854,8 @@ def pay_vendor_group(rental_id):
             updated_balance = row["total"] - updated_paid
 
             conn.execute(
-                "UPDATE outside_items SET paid=?, balance=? WHERE id=?",
-                (updated_paid, updated_balance, row["id"])
+                "UPDATE outside_items SET paid=?, balance=? WHERE id=? AND tenant_id=?",
+                (updated_paid, updated_balance, row["id"], tenant_id)
             )
             payment_left -= row_payment
 

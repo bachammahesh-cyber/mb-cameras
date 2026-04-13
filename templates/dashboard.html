@@ -20,6 +20,10 @@
 
 <div class="container">
 
+{% if tenant_id == demo_tenant_id %}
+<p>You are viewing the demo workspace with sample data only.</p>
+{% endif %}
+
 <div class="cards dashboard-cards">
 
 <a href="/new_rental">
