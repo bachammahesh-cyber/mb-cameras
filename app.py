@@ -106,6 +106,39 @@ def tenant_demo_data_exists(conn, tenant_id):
     return bool(existing_client)
 
 
+def get_user_by_username(conn, username):
+    normalized_username = username.strip().lower()
+    return conn.execute(
+        "SELECT * FROM users WHERE LOWER(TRIM(username))=?",
+        (normalized_username,)
+    ).fetchone()
+
+
+def upsert_user(conn, username, raw_password, role, tenant_id):
+    normalized_username = username.strip().lower()
+    password = generate_password_hash(raw_password)
+    existing_user = get_user_by_username(conn, normalized_username)
+
+    if existing_user:
+        conn.execute("""
+        UPDATE users
+        SET username=?, password=?, role=?, tenant_id=?
+        WHERE id=?
+        """, (
+            normalized_username,
+            password,
+            role,
+            tenant_id,
+            existing_user["id"]
+        ))
+        return
+
+    conn.execute("""
+    INSERT INTO users(username,password,role,tenant_id)
+    VALUES(?,?,?,?)
+    """, (normalized_username, password, role, tenant_id))
+
+
 # -----------------------
 # Initialize database
 # -----------------------
@@ -410,20 +443,13 @@ def seed_default_users():
         (DEMO_USERNAME, DEMO_PASSWORD, "owner", DEMO_TENANT_ID)
     ]
 
-    for username, raw_password, role, tenant_id in defaults:
-        password = generate_password_hash(raw_password)
+    try:
+        for username, raw_password, role, tenant_id in defaults:
+            upsert_user(conn, username, raw_password, role, tenant_id)
 
-        conn.execute("""
-        INSERT INTO users(username,password,role,tenant_id)
-        VALUES(?,?,?,?)
-        ON CONFLICT(username) DO UPDATE SET
-            password=excluded.password,
-            role=excluded.role,
-            tenant_id=excluded.tenant_id
-        """, (username, password, role, tenant_id))
-
-    conn.commit()
-    conn.close()
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def seed_demo_data():
@@ -568,15 +594,12 @@ def login():
 
     if request.method == "POST":
 
-        username = request.form["username"]
+        username = request.form["username"].strip().lower()
         password = request.form["password"]
 
         conn = get_db()
 
-        user = conn.execute(
-            "SELECT * FROM users WHERE username=?",
-            (username,)
-        ).fetchone()
+        user = get_user_by_username(conn, username)
 
         conn.close()
 
