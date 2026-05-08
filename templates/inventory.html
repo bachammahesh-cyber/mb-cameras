@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Inventory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+    <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<div class="box">
+
+<h2>Add Equipment</h2>
+
+<form method="POST" action="/add_item">
+
+<label>Equipment Name</label>
+<input name="name" required>
+
+<label>Category</label>
+<input name="category">
+
+<label>Rent Per Day</label>
+<input type="number" step="0.01" name="rent">
+
+<button type="submit">Add Equipment</button>
+
+</form>
+
+</div>
+
+
+<div class="box">
+
+<h2>Add Client</h2>
+
+<form method="POST" action="/add_client">
+
+<label>Client Name</label>
+<input name="name" required>
+
+<label>Phone Number</label>
+<input name="phone" required>
+
+<label>Address</label>
+<textarea name="address" rows="3" required></textarea>
+
+<button type="submit">Add Client</button>
+
+</form>
+
+</div>
+
+
+<div class="box">
+
+<h2>Inventory List</h2>
+
+<table class="records-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Category</th>
+<th>Rent / Day</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for item in items %}
+
+<tr>
+<td>{{ item.id }}</td>
+<td>{{ item.name }}</td>
+<td>{{ item.category }}</td>
+<td>₹{{ item.rent_per_day }}</td>
+<td>{{ item.status }}</td>
+<td>
+<div class="table-actions">
+<a class="mini-btn mini-btn-edit" href="/edit_item/{{ item.id }}">Edit</a>
+{% if item.can_delete %}
+<form method="POST" action="/delete_item/{{ item.id }}" onsubmit="return confirm('Delete this equipment item?');">
+<button type="submit" class="mini-btn mini-btn-delete">Delete</button>
+</form>
+{% else %}
+<button type="button" class="mini-btn mini-btn-delete" disabled title="{{ item.delete_reason }}">Delete</button>
+{% endif %}
+</div>
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+<div class="box">
+
+<h2>Client List</h2>
+
+<table class="records-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Phone</th>
+<th>Address</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for client in clients %}
+
+<tr>
+<td>{{ client.id }}</td>
+<td>{{ client.name }}</td>
+<td>{{ client.phone }}</td>
+<td>{{ client.address }}</td>
+<td>
+<div class="table-actions">
+<a class="mini-btn mini-btn-edit" href="/edit_client/{{ client.id }}">Edit</a>
+<form method="POST" action="/delete_client/{{ client.id }}" onsubmit="return confirm('Delete this client?');">
+<button type="submit" class="mini-btn mini-btn-delete">Delete</button>
+</form>
+</div>
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="bottom-logout-band">
+<a href="/logout">Logout</a>
+</div>
+
+</body>
+</html>

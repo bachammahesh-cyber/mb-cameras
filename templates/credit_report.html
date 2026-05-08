@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Financials</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+<h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<h2 class="page-title">Financials</h2>
+
+<div class="box financial-box">
+<h2>Filter Period</h2>
+<form class="financial-filter-form" method="GET" action="/credit_report">
+<div>
+<label>From Date</label>
+<input type="date" name="from_date" value="{{ filters['from_date'] }}">
+</div>
+<div>
+<label>To Date</label>
+<input type="date" name="to_date" value="{{ filters['to_date'] }}">
+</div>
+<div class="financial-filter-actions">
+<button type="submit">Apply</button>
+<a href="/credit_report" class="mini-btn mini-btn-edit">Clear</a>
+</div>
+</form>
+</div>
+
+<div class="box financial-box">
+
+<h2>Revenues</h2>
+<p class="period-label">Period: {{ revenues["period_label"] }}</p>
+
+<div class="revenue-grid">
+<div class="revenue-card">
+<h3>Customer Total</h3>
+<p>₹{{ revenues["customer_total"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Customer Due</h3>
+<p>₹{{ revenues["customer_due"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Vendor Due</h3>
+<p>₹{{ revenues["vendor_due"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Projected Net</h3>
+<p>₹{{ revenues["projected_net"] }}</p>
+</div>
+<div class="revenue-card">
+<h3>Realized Net</h3>
+<p>₹{{ revenues["realized_net"] }}</p>
+</div>
+</div>
+
+</div>
+
+<div class="box financial-box">
+
+<h2>Customer Dues</h2>
+
+<table class="records-table">
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Date</th>
+<th>Customer</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Balance</th>
+<th>Receive Amount</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for r in rentals %}
+
+<tr>
+
+<td>{{r.id}}</td>
+
+<td>
+{{r.start_date[8:10]}}/{{r.start_date[5:7]}}/{{r.start_date[2:4]}}
+</td>
+
+<td>{{r.customer_name}}</td>
+
+<td>₹{{r.total_amount}}</td>
+
+<td>₹{{r.advance_paid}}</td>
+
+<td>₹{{r.balance}}</td>
+
+<td>
+
+<form action="/add_payment/{{r.id}}" method="POST" style="display:flex;gap:6px;">
+
+<input name="payment" placeholder="Amount">
+
+<button>Process</button>
+
+</form>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+
+
+<div class="box financial-box">
+
+<h2>Vendor Payments</h2>
+
+<table class="records-table">
+
+<thead>
+<tr>
+<th>Rental ID</th>
+<th>Taken Date</th>
+<th>Vendor</th>
+<th>Equipment</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Balance</th>
+<th>Pay Vendor</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for v in vendors %}
+
+<tr>
+
+<td>{{ v["rental_id"] }}</td>
+
+<td>{{ v["start_date"] }}</td>
+
+<td>{{ v["vendor_name"] }}</td>
+
+<td>
+<details>
+<summary>View items ({{ v["items"]|length }})</summary>
+<ul style="margin:8px 0 0 18px; padding:0;">
+{% for item in v["items"] %}
+<li>{{ item.name }} - ₹{{ item.rate_per_day }}/day - {{ item.days }} day(s) - ₹{{ item.total }}</li>
+{% endfor %}
+</ul>
+</details>
+</td>
+
+<td>₹{{ v["total"] }}</td>
+
+<td>₹{{ v["paid"] }}</td>
+
+<td>₹{{ v["balance"] }}</td>
+
+<td>
+
+<form action="/pay_vendor_group/{{ v['rental_id'] }}" method="POST" style="display:flex;gap:6px;">
+
+<input type="hidden" name="vendor_name" value="{{ v['vendor_name_raw'] }}">
+
+<input name="payment" placeholder="Amount">
+
+<button>Pay</button>
+
+</form>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="bottom-logout-band">
+<a href="/logout">Logout</a>
+</div>
+
+</body>
+</html>

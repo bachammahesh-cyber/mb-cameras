@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="dashboard-page with-logout-band">
+
+<div class="header brand-band">
+    <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+{% if tenant_id == demo_tenant_id %}
+<p>You are viewing the demo workspace with sample data only.</p>
+{% endif %}
+
+<div class="cards dashboard-cards">
+
+<a href="/new_rental">
+<div class="card dash-card tone-rental">
+<h3 class="dash-card-title">🎬 Make Rental Entry</h3>
+<p>Create a new camera rental job</p>
+</div>
+</a>
+
+<a href="/rental_records">
+<div class="card dash-card tone-records">
+<h3 class="dash-card-title">📋 Rental Records</h3>
+<p>View all rental entries</p>
+</div>
+</a>
+
+<a href="/inventory">
+<div class="card dash-card tone-inventory">
+<h3 class="dash-card-title">📦 Inventory</h3>
+<p>Manage camera equipment</p>
+</div>
+</a>
+
+<a href="/credit_report">
+<div class="card dash-card tone-financials">
+<h3 class="dash-card-title">💰 Financials</h3>
+<p>Customer payments & vendor dues</p>
+</div>
+</a>
+
+</div>
+
+</div>
+
+<div class="bottom-logout-band">
+<a href="/logout">Logout</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Rental Records</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+<h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<h2 class="page-title">Rental Records</h2>
+
+<div class="card">
+
+<h2>All Rentals</h2>
+
+<table class="records-table">
+
+<thead>
+<tr>
+
+<th>Date</th>
+<th>ID</th>
+<th>Customer</th>
+<th>Phone</th>
+<th>Equipment</th>
+<th>Days</th>
+<th>Total</th>
+<th>Paid</th>
+<th>Balance</th>
+<th>Status</th>
+{% if role == "owner" %}
+<th>Owner Actions</th>
+{% endif %}
+
+</tr>
+</thead>
+
+<tbody>
+
+{% for r in rentals %}
+
+<tr>
+
+<td>{{ r.given_date_display }}</td>
+<td>{{ r.id }}</td>
+<td>{{ r.customer_name }}</td>
+<td>{{ r.phone }}</td>
+<td>
+{% if r.equipment_names %}
+<select>
+<option selected disabled>
+{{ r.equipment_names|length }} item{% if r.equipment_names|length != 1 %}s{% endif %} rented
+</option>
+{% for item_name in r.equipment_names %}
+<option>{{ item_name }}</option>
+{% endfor %}
+</select>
+{% else %}
+<select>
+<option selected disabled>No items</option>
+</select>
+{% endif %}
+</td>
+
+<td>{{ r.rental_days }}</td>
+
+<td>₹{{ r.total_amount }}</td>
+<td>₹{{ r.advance_paid }}</td>
+<td>₹{{ r.balance }}</td>
+<td>
+{% if r.status == 'Active' %}
+<form method="POST" action="/toggle_rental_status/{{ r.id }}">
+<button
+type="submit"
+class="status-toggle {% if r.status == 'Active' %}is-active{% else %}is-returned{% endif %}"
+>
+Rented
+</button>
+</form>
+{% else %}
+<span class="status-toggle is-returned is-static">Returned</span>
+{% endif %}
+</td>
+{% if role == "owner" %}
+<td>
+<div class="table-actions">
+<a class="mini-btn mini-btn-edit" href="/edit_rental/{{ r.id }}">Edit</a>
+<form method="POST" action="/delete_rental/{{ r.id }}" onsubmit="return confirm('Delete this rental entry?');">
+<button type="submit" class="mini-btn mini-btn-delete">Delete</button>
+</form>
+</div>
+</td>
+{% endif %}
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="bottom-logout-band">
+<a href="/logout">Logout</a>
+</div>
+
+</body>
+</html>

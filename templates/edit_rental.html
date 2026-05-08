@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Edit Rental</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="/static/style.css">
+
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+<h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<h2 class="page-title">Edit Rental Entry</h2>
+
+<form method="POST">
+
+<label>Customer Name</label>
+<input
+type="text"
+name="customer_name"
+id="customer_name"
+value="{{ rental.customer_name }}"
+list="client_names"
+autocomplete="off"
+required
+>
+<datalist id="client_names">
+{% for client in clients %}
+<option value="{{ client.name }}"></option>
+{% endfor %}
+</datalist>
+<small>Select an existing client or type a new name.</small>
+
+<label>Phone</label>
+<input type="text" name="phone" id="phone" value="{{ rental.phone }}" required>
+
+<label>Start Date</label>
+<input type="date" name="start_date" value="{{ rental.start_date }}" required>
+
+<label>End Date</label>
+<input type="date" name="end_date" value="{{ rental.end_date }}" required>
+
+<label>Advance Paid</label>
+<input type="number" name="advance_paid" value="{{ rental.advance_paid }}" required>
+
+<label>Status</label>
+<select name="status" required>
+<option value="Active" {% if rental.status == "Active" %}selected{% endif %}>Active</option>
+<option value="Returned" {% if rental.status == "Returned" %}selected{% endif %}>Returned</option>
+</select>
+
+</div>
+
+<div class="card">
+
+<h3>Our Equipment</h3>
+
+<div class="equipment-grid">
+
+{% if items|length == 0 %}
+<p>No equipment available. Please <a href="/inventory">add items in Inventory</a>.</p>
+{% endif %}
+
+{% for item in items %}
+
+<label class="equipment-card">
+
+<input
+type="checkbox"
+name="item_ids"
+value="{{ item['id'] }}"
+{% if item['id'] in selected_item_ids %}checked{% endif %}
+>
+
+<div class="equipment-info">
+
+<div class="equipment-title">
+{{ item['name'] }}
+</div>
+
+<div class="equipment-price">
+Inventory price: ₹{{ item['rent_per_day'] }} / day
+</div>
+
+</div>
+
+<input
+type="number"
+class="vendor-price"
+name="item_rates[{{ item['id'] }}]"
+placeholder="Price"
+step="0.01"
+value="{{ selected_rates.get(item['id'], item['rent_per_day']) }}"
+>
+
+</label>
+
+{% endfor %}
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Outside Equipment (Vendor)</h3>
+
+<label>Vendor Name</label>
+<input type="text" name="vendor_name" value="{{ outside_vendor_name }}">
+
+<div class="equipment-grid">
+
+{% if vendor_items|length == 0 %}
+<p>No equipment found. Please <a href="/inventory">add items in Inventory</a>.</p>
+{% endif %}
+
+{% for item in vendor_items %}
+
+<label class="equipment-card" id="vendor-card-{{ item['id'] }}" style="display:none;">
+
+<input
+type="checkbox"
+name="vendor_item_ids"
+value="{{ item['id'] }}"
+{% if item['name'] in selected_vendor_item_names %}checked{% endif %}
+>
+
+<div class="equipment-info">
+
+<div class="equipment-title">
+{{ item['name'] }}
+</div>
+
+<div class="equipment-price">
+Inventory price: ₹{{ item['rent_per_day'] }} / day
+</div>
+
+</div>
+
+<input
+type="number"
+class="vendor-price"
+name="vendor_rates[{{ item['id'] }}]"
+placeholder="Price"
+step="0.01"
+value="{{ selected_vendor_rates.get(item['name'], item['rent_per_day']) }}"
+>
+
+</label>
+
+{% endfor %}
+
+</div>
+
+<div class="center">
+<button type="submit">Save Changes</button>
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+<div class="bottom-logout-band">
+<a href="/logout">Logout</a>
+</div>
+
+<script>
+const clientDetails = {
+{% for client in clients %}
+  {{ client.name|tojson }}: {{ {"phone": client.phone, "address": client.address}|tojson }}{% if not loop.last %},{% endif %}
+{% endfor %}
+};
+
+const customerNameInput = document.getElementById("customer_name");
+const phoneInput = document.getElementById("phone");
+
+function syncClientPhone() {
+    const client = clientDetails[customerNameInput.value];
+    if (client) {
+        phoneInput.value = client.phone || "";
+    }
+}
+
+customerNameInput.addEventListener("change", syncClientPhone);
+customerNameInput.addEventListener("input", syncClientPhone);
+
+// Show outside equipment cards based on own equipment selection
+function syncVendorCard(checkbox) {
+    const itemId = checkbox.value;
+    const vendorCard = document.getElementById("vendor-card-" + itemId);
+    if (!vendorCard) return;
+    if (checkbox.checked) {
+        vendorCard.style.display = "";
+    } else {
+        vendorCard.style.display = "none";
+        vendorCard.querySelector('input[type="checkbox"]').checked = false;
+        const rateInput = vendorCard.querySelector('input[type="number"]');
+        if (rateInput) rateInput.value = "";
+    }
+}
+
+// Wire up live changes
+document.querySelectorAll('input[name="item_ids"]').forEach(function(checkbox) {
+    checkbox.addEventListener("change", function() { syncVendorCard(this); });
+});
+
+// On load: show cards for already-checked own equipment
+document.querySelectorAll('input[name="item_ids"]').forEach(function(checkbox) {
+    if (checkbox.checked) syncVendorCard(checkbox);
+});
+</script>
+
+</body>
+</html>
