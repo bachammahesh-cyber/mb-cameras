@@ -30,10 +30,14 @@
     <button class="filter-btn" data-status="Active" onclick="setStatus(this)">Active</button>
     <button class="filter-btn" data-status="Returned" onclick="setStatus(this)">Returned</button>
   </div>
+  <div class="status-filters">
+    <button class="filter-btn" id="btn-this-month" onclick="setThisMonth()">This Month</button>
+    <button class="filter-btn" id="btn-all-time" onclick="setAllTime()">All Time</button>
+  </div>
   <div class="date-filters">
-    <input type="date" id="filter-from" onchange="applyFilters()" title="From date">
+    <input type="date" id="filter-from" onchange="onDateChange()" title="From date">
     <span>–</span>
-    <input type="date" id="filter-to" onchange="applyFilters()" title="To date">
+    <input type="date" id="filter-to" onchange="onDateChange()" title="To date">
   </div>
 </div>
 
@@ -132,8 +136,39 @@
 <script>
 let activeStatus = "all";
 
+function getMonthRange() {
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth();
+    const from = new Date(y, m, 1).toISOString().slice(0, 10);
+    const to = new Date(y, m + 1, 0).toISOString().slice(0, 10);
+    return { from, to };
+}
+
+function setThisMonth() {
+    const { from, to } = getMonthRange();
+    document.getElementById('filter-from').value = from;
+    document.getElementById('filter-to').value = to;
+    document.getElementById('btn-this-month').classList.add('active');
+    document.getElementById('btn-all-time').classList.remove('active');
+    applyFilters();
+}
+
+function setAllTime() {
+    document.getElementById('filter-from').value = '';
+    document.getElementById('filter-to').value = '';
+    document.getElementById('btn-all-time').classList.add('active');
+    document.getElementById('btn-this-month').classList.remove('active');
+    applyFilters();
+}
+
+function onDateChange() {
+    document.getElementById('btn-this-month').classList.remove('active');
+    document.getElementById('btn-all-time').classList.remove('active');
+    applyFilters();
+}
+
 function setStatus(btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.closest('.status-filters').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     activeStatus = btn.dataset.status;
     applyFilters();
@@ -163,6 +198,9 @@ function applyFilters() {
 
     document.getElementById('no-results').style.display = visible === 0 ? '' : 'none';
 }
+
+// Default to current month on load
+setThisMonth();
 </script>
 
 </body>

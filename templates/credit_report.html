@@ -23,9 +23,24 @@
 <a href="/dashboard" class="back-link">← Dashboard</a>
 <h2 class="page-title">Financials</h2>
 
+<!-- Period selector -->
+<div class="box financial-box" style="padding-bottom:14px;">
+<div class="period-selector">
+  <a href="/credit_report" class="filter-btn {% if not filters['show_all'] and filters['month'] and not filters['from_date'] %}active{% endif %}">This Month</a>
+  <a href="/credit_report?all=1" class="filter-btn {% if filters['show_all'] %}active{% endif %}">All Time</a>
+  <button class="filter-btn {% if filters['from_date'] or (filters['month'] and not filters['show_all'] and filters['month'] != '' and filters['from_date'] == '' and filters['to_date'] == '' and not (not filters['show_all'] and filters['month'])) %}{% endif %}" onclick="toggleCustom()">Custom ▾</button>
+</div>
+<form id="custom-form" method="GET" action="/credit_report" class="custom-period-form" style="display:{% if filters['from_date'] or filters['to_date'] %}flex{% else %}none{% endif %};">
+  <input type="date" name="from_date" value="{{ filters['from_date'] }}" placeholder="From">
+  <span style="color:#888;">–</span>
+  <input type="date" name="to_date" value="{{ filters['to_date'] }}" placeholder="To">
+  <button type="submit" class="filter-btn active">Apply</button>
+</form>
+</div>
+
+<!-- Revenue cards -->
 <div class="box financial-box">
-<h2>Revenues</h2>
-<p class="period-label">Period: {{ revenues["period_label"] }}</p>
+<h2>Revenues <span class="period-label">— {{ revenues["period_label"] }}</span></h2>
 <div class="revenue-grid">
 <div class="revenue-card">
 <h3>Customer Total</h3>
@@ -50,43 +65,35 @@
 </div>
 </div>
 
+<!-- Customer Dues -->
 <div class="box financial-box">
-
 <h2>Customer Dues</h2>
-
 <div class="filter-bar" style="margin-bottom:12px;">
-<input type="text" id="search-customer" placeholder="Search customer or ID…" oninput="filterTable('customer-tbody','search-customer')">
-<div class="status-filters">
-<button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'customer-tbody')">All</button>
-<button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'customer-tbody')">Due</button>
-<button class="filter-btn" data-bal="clear" onclick="setBalFilter(this,'customer-tbody')">Cleared</button>
+  <input type="text" id="search-customer" placeholder="Search customer or ID…" oninput="filterTable('customer-tbody','search-customer')">
+  <div class="status-filters">
+    <button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'customer-tbody')">All</button>
+    <button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'customer-tbody')">Due</button>
+    <button class="filter-btn" data-bal="clear" onclick="setBalFilter(this,'customer-tbody')">Cleared</button>
+  </div>
 </div>
-</div>
-
 <table class="records-table">
 <thead>
 <tr>
-<th>ID</th>
-<th>Date</th>
-<th>Customer</th>
-<th>Total</th>
-<th>Paid</th>
-<th>Balance</th>
-<th>Receive Amount</th>
+<th>ID</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Receive Amount</th>
 </tr>
 </thead>
 <tbody id="customer-tbody">
 {% for r in rentals %}
 <tr data-search="{{ r.customer_name | lower }} {{ r.id }}"
     data-bal="{% if r.balance > 0 %}due{% else %}clear{% endif %}">
-<td>{{r.id}}</td>
-<td>{{r.start_date[8:10]}}/{{r.start_date[5:7]}}/{{r.start_date[2:4]}}</td>
-<td>{{r.customer_name}}</td>
-<td>₹{{r.total_amount}}</td>
-<td>₹{{r.advance_paid}}</td>
-<td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{r.balance}}</td>
+<td>{{ r.id }}</td>
+<td>{{ r.start_date[8:10] }}/{{ r.start_date[5:7] }}/{{ r.start_date[2:4] }}</td>
+<td>{{ r.customer_name }}</td>
+<td>₹{{ r.total_amount }}</td>
+<td>₹{{ r.advance_paid }}</td>
+<td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ r.balance }}</td>
 <td>
-<form action="/add_payment/{{r.id}}" method="POST" style="display:flex;gap:6px;" onsubmit="return confirmAmount(this,'Receive')">
+<form action="/add_payment/{{ r.id }}" method="POST" style="display:flex;gap:6px;" onsubmit="return confirmAmount(this,'Receive')">
 <input name="payment" placeholder="Amount">
 <button>Process</button>
 </form>
@@ -96,33 +103,23 @@
 </tbody>
 </table>
 <p id="no-customer" style="display:none;padding:10px;color:#888;">No entries match.</p>
-
 </div>
 
+<!-- Vendor Payments -->
 <div class="box financial-box">
-
 <h2>Vendor Payments</h2>
-
 <div class="filter-bar" style="margin-bottom:12px;">
-<input type="text" id="search-vendor" placeholder="Search vendor…" oninput="filterTable('vendor-tbody','search-vendor')">
-<div class="status-filters">
-<button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'vendor-tbody')">All</button>
-<button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'vendor-tbody')">Due</button>
-<button class="filter-btn" data-bal="clear" onclick="setBalFilter(this,'vendor-tbody')">Cleared</button>
+  <input type="text" id="search-vendor" placeholder="Search vendor…" oninput="filterTable('vendor-tbody','search-vendor')">
+  <div class="status-filters">
+    <button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'vendor-tbody')">All</button>
+    <button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'vendor-tbody')">Due</button>
+    <button class="filter-btn" data-bal="clear" onclick="setBalFilter(this,'vendor-tbody')">Cleared</button>
+  </div>
 </div>
-</div>
-
 <table class="records-table">
 <thead>
 <tr>
-<th>Rental ID</th>
-<th>Taken Date</th>
-<th>Vendor</th>
-<th>Equipment</th>
-<th>Total</th>
-<th>Paid</th>
-<th>Balance</th>
-<th>Pay Vendor</th>
+<th>Rental ID</th><th>Date</th><th>Vendor</th><th>Equipment</th><th>Total</th><th>Paid</th><th>Balance</th><th>Pay Vendor</th>
 </tr>
 </thead>
 <tbody id="vendor-tbody">
@@ -130,7 +127,7 @@
 <tr data-search="{{ v['vendor_name'] | lower }}"
     data-bal="{% if v['balance'] > 0 %}due{% else %}clear{% endif %}">
 <td>{{ v["rental_id"] }}</td>
-<td>{{ v["start_date"] }}</td>
+<td>{{ v["start_date"][8:10] }}/{{ v["start_date"][5:7] }}/{{ v["start_date"][2:4] }}</td>
 <td>{{ v["vendor_name"] }}</td>
 <td>
 <details>
@@ -157,7 +154,6 @@
 </tbody>
 </table>
 <p id="no-vendor" style="display:none;padding:10px;color:#888;">No entries match.</p>
-
 </div>
 
 </div>
@@ -167,6 +163,11 @@
 </div>
 
 <script>
+function toggleCustom() {
+    const f = document.getElementById('custom-form');
+    f.style.display = f.style.display === 'none' ? 'flex' : 'none';
+}
+
 function confirmAmount(form, label) {
     const input = form.querySelector('input[name="payment"]');
     const amount = input ? input.value.trim() : '';
@@ -186,7 +187,7 @@ function setBalFilter(btn, tbodyId) {
     applyTableFilter(tbodyId);
 }
 
-function filterTable(tbodyId, inputId) {
+function filterTable(tbodyId) {
     applyTableFilter(tbodyId);
 }
 
@@ -196,17 +197,13 @@ function applyTableFilter(tbodyId) {
     const search = document.getElementById(inputId).value.toLowerCase().trim();
     const balFilter = balStates[tbodyId];
     let visible = 0;
-
     document.querySelectorAll('#' + tbodyId + ' tr').forEach(function(row) {
         const rowSearch = (row.dataset.search || '').toLowerCase();
         const rowBal = row.dataset.bal || '';
-        const matchSearch = !search || rowSearch.includes(search);
-        const matchBal = balFilter === 'all' || rowBal === balFilter;
-        const show = matchSearch && matchBal;
+        const show = (!search || rowSearch.includes(search)) && (balFilter === 'all' || rowBal === balFilter);
         row.style.display = show ? '' : 'none';
         if (show) visible++;
     });
-
     document.getElementById(noResultsId).style.display = visible === 0 ? '' : 'none';
 }
 </script>

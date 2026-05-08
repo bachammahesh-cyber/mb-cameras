@@ -1669,9 +1669,14 @@ def credit_report():
     if "user_id" not in session:
         return redirect("/")
 
+    show_all = request.args.get("all", "").strip() == "1"
     month = request.args.get("month", "").strip()
     from_date = request.args.get("from_date", "").strip()
     to_date = request.args.get("to_date", "").strip()
+
+    # Default to current month when no filters are specified
+    if not show_all and not month and not from_date and not to_date:
+        month = datetime.now().strftime("%Y-%m")
 
     selected_month = ""
     period_label = "All time"
@@ -1821,7 +1826,8 @@ def credit_report():
         filters={
             "month": selected_month,
             "from_date": from_date,
-            "to_date": to_date
+            "to_date": to_date,
+            "show_all": show_all
         }
     )
 
