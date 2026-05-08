@@ -336,6 +336,23 @@ background:linear-gradient(140deg,#edf8ff 0%,#d2ebfb 55%,#bddff5 100%);
 TABLES
 ------------------------ */
 
+/* Filter bar */
+.filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px;}
+.filter-bar input[type="text"]{flex:1;min-width:180px;padding:8px 12px;border:1px solid #dde3ea;border-radius:8px;font-size:14px;}
+.filter-bar input[type="date"]{padding:7px 10px;border:1px solid #dde3ea;border-radius:8px;font-size:14px;}
+.status-filters{display:flex;gap:6px;}
+.date-filters{display:flex;align-items:center;gap:6px;color:#888;font-size:13px;}
+.filter-btn{padding:6px 14px;border:1px solid #dde3ea;border-radius:20px;background:#fff;font-size:13px;cursor:pointer;color:#555;}
+.filter-btn.active{background:#1e40af;color:#fff;border-color:#1e40af;}
+
+/* Balance colours */
+.balance-due{color:#dc2626;font-weight:600;}
+.balance-clear{color:#16a34a;font-weight:600;}
+
+/* Back link */
+.back-link{display:inline-block;margin-bottom:14px;font-size:13px;color:#1e40af;text-decoration:none;}
+.back-link:hover{text-decoration:underline;}
+
 .records-table{
 width:100%;
 border-collapse:collapse;

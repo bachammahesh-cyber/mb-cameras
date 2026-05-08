@@ -23,15 +23,26 @@
 
 <h2 class="page-title">Rental Records</h2>
 
-<div class="card">
+<div class="filter-bar">
+  <input type="text" id="search" placeholder="Search customer or phone…" oninput="applyFilters()">
+  <div class="status-filters">
+    <button class="filter-btn active" data-status="all" onclick="setStatus(this)">All</button>
+    <button class="filter-btn" data-status="Active" onclick="setStatus(this)">Active</button>
+    <button class="filter-btn" data-status="Returned" onclick="setStatus(this)">Returned</button>
+  </div>
+  <div class="date-filters">
+    <input type="date" id="filter-from" onchange="applyFilters()" title="From date">
+    <span>–</span>
+    <input type="date" id="filter-to" onchange="applyFilters()" title="To date">
+  </div>
+</div>
 
-<h2>All Rentals</h2>
+<div class="card">
 
 <table class="records-table">
 
 <thead>
 <tr>
-
 <th>Date</th>
 <th>ID</th>
 <th>Customer</th>
@@ -43,17 +54,19 @@
 <th>Balance</th>
 <th>Status</th>
 {% if role == "owner" %}
-<th>Owner Actions</th>
+<th>Actions</th>
 {% endif %}
-
 </tr>
 </thead>
 
-<tbody>
+<tbody id="rental-tbody">
 
 {% for r in rentals %}
 
-<tr>
+<tr data-customer="{{ r.customer_name | lower }}"
+    data-phone="{{ r.phone }}"
+    data-status="{{ r.status }}"
+    data-date="{{ r.start_date }}">
 
 <td>{{ r.given_date_display }}</td>
 <td>{{ r.id }}</td>
@@ -70,26 +83,18 @@
 {% endfor %}
 </select>
 {% else %}
-<select>
-<option selected disabled>No items</option>
-</select>
+<select><option selected disabled>No items</option></select>
 {% endif %}
 </td>
 
 <td>{{ r.rental_days }}</td>
-
 <td>₹{{ r.total_amount }}</td>
 <td>₹{{ r.advance_paid }}</td>
-<td>₹{{ r.balance }}</td>
+<td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ r.balance }}</td>
 <td>
 {% if r.status == 'Active' %}
 <form method="POST" action="/toggle_rental_status/{{ r.id }}">
-<button
-type="submit"
-class="status-toggle {% if r.status == 'Active' %}is-active{% else %}is-returned{% endif %}"
->
-Rented
-</button>
+<button type="submit" class="status-toggle is-active">Rented</button>
 </form>
 {% else %}
 <span class="status-toggle is-returned is-static">Returned</span>
@@ -114,6 +119,8 @@ Rented
 
 </table>
 
+<p id="no-results" style="display:none; padding:12px; color:#888;">No rentals match your filters.</p>
+
 </div>
 
 </div>
@@ -121,6 +128,42 @@ Rented
 <div class="bottom-logout-band">
 <a href="/logout">Logout</a>
 </div>
+
+<script>
+let activeStatus = "all";
+
+function setStatus(btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeStatus = btn.dataset.status;
+    applyFilters();
+}
+
+function applyFilters() {
+    const search = document.getElementById('search').value.toLowerCase().trim();
+    const fromDate = document.getElementById('filter-from').value;
+    const toDate = document.getElementById('filter-to').value;
+    let visible = 0;
+
+    document.querySelectorAll('#rental-tbody tr').forEach(function(row) {
+        const customer = row.dataset.customer || '';
+        const phone = row.dataset.phone || '';
+        const status = row.dataset.status || '';
+        const date = row.dataset.date || '';
+
+        const matchSearch = !search || customer.includes(search) || phone.includes(search);
+        const matchStatus = activeStatus === 'all' || status === activeStatus;
+        const matchFrom = !fromDate || date >= fromDate;
+        const matchTo = !toDate || date <= toDate;
+
+        const show = matchSearch && matchStatus && matchFrom && matchTo;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    document.getElementById('no-results').style.display = visible === 0 ? '' : 'none';
+}
+</script>
 
 </body>
 </html>
