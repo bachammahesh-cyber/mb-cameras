@@ -129,7 +129,7 @@ value="{{ selected_rates.get(item['id'], item['rent_per_day']) }}"
 
 {% for item in vendor_items %}
 
-<label class="equipment-card">
+<label class="equipment-card" id="vendor-card-{{ item['id'] }}" style="display:none;">
 
 <input
 type="checkbox"
@@ -198,6 +198,25 @@ function syncClientPhone() {
 
 customerNameInput.addEventListener("change", syncClientPhone);
 customerNameInput.addEventListener("input", syncClientPhone);
+
+// Show/hide outside equipment cards based on own equipment selection
+function syncVendorCard(checkbox) {
+    const vendorCard = document.getElementById("vendor-card-" + checkbox.value);
+    if (!vendorCard) return;
+    if (checkbox.checked) {
+        vendorCard.style.display = "";
+    } else {
+        vendorCard.style.display = "none";
+        vendorCard.querySelector('input[type="checkbox"]').checked = false;
+        const rateInput = vendorCard.querySelector('input[type="number"]');
+        if (rateInput) rateInput.value = "";
+    }
+}
+
+document.querySelectorAll('input[name="item_ids"]').forEach(function(checkbox) {
+    checkbox.addEventListener("change", function() { syncVendorCard(this); });
+    if (checkbox.checked) syncVendorCard(checkbox);
+});
 </script>
 
 </body>
