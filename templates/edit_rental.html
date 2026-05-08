@@ -83,6 +83,7 @@ type="checkbox"
 name="item_ids"
 value="{{ item['id'] }}"
 {% if item['id'] in selected_item_ids %}checked{% endif %}
+onchange="syncOwnQty(this)"
 >
 
 <div class="equipment-info">
@@ -105,6 +106,12 @@ placeholder="Price"
 step="0.01"
 value="{{ selected_rates.get(item['id'], item['rent_per_day']) }}"
 >
+
+<div class="qty-stepper" id="qty-own-{{ item['id'] }}" {% if item['id'] not in selected_item_ids %}style="display:none;"{% endif %}>
+<button type="button" onclick="changeQty('qty-val-own-{{ item[\'id\'] }}', -1)">-</button>
+<input type="number" id="qty-val-own-{{ item['id'] }}" name="item_quantities[{{ item['id'] }}]" value="{{ selected_quantities.get(item['id'], 1) }}" min="1" class="qty-input">
+<button type="button" onclick="changeQty('qty-val-own-{{ item[\'id\'] }}', 1)">+</button>
+</div>
 
 </label>
 
@@ -136,6 +143,7 @@ type="checkbox"
 name="vendor_item_ids"
 value="{{ item['id'] }}"
 {% if item['name'] in selected_vendor_item_names %}checked{% endif %}
+onchange="syncVendorQty(this)"
 >
 
 <div class="equipment-info">
@@ -158,6 +166,12 @@ placeholder="Price"
 step="0.01"
 value="{{ selected_vendor_rates.get(item['name'], item['rent_per_day']) }}"
 >
+
+<div class="qty-stepper" id="qty-vendor-{{ item['id'] }}" {% if item['name'] not in selected_vendor_item_names %}style="display:none;"{% endif %}>
+<button type="button" onclick="changeQty('qty-val-vendor-{{ item[\'id\'] }}', -1)">-</button>
+<input type="number" id="qty-val-vendor-{{ item['id'] }}" name="vendor_quantities[{{ item['id'] }}]" value="{{ selected_vendor_quantities.get(item['name'], 1) }}" min="1" class="qty-input">
+<button type="button" onclick="changeQty('qty-val-vendor-{{ item[\'id\'] }}', 1)">+</button>
+</div>
 
 </label>
 
@@ -199,7 +213,36 @@ function syncClientPhone() {
 customerNameInput.addEventListener("change", syncClientPhone);
 customerNameInput.addEventListener("input", syncClientPhone);
 
-// Show/hide outside equipment cards based on own equipment selection
+function changeQty(inputId, delta) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.value = Math.max(1, (parseInt(input.value) || 1) + delta);
+}
+
+function syncOwnQty(checkbox) {
+    const stepper = document.getElementById("qty-own-" + checkbox.value);
+    if (!stepper) return;
+    if (checkbox.checked) {
+        stepper.style.display = "";
+        const input = stepper.querySelector('input[type="number"]');
+        if (input && (!input.value || input.value < 1)) input.value = 1;
+    } else {
+        stepper.style.display = "none";
+    }
+}
+
+function syncVendorQty(checkbox) {
+    const stepper = document.getElementById("qty-vendor-" + checkbox.value);
+    if (!stepper) return;
+    if (checkbox.checked) {
+        stepper.style.display = "";
+        const input = stepper.querySelector('input[type="number"]');
+        if (input && (!input.value || input.value < 1)) input.value = 1;
+    } else {
+        stepper.style.display = "none";
+    }
+}
+
 function syncVendorCard(checkbox) {
     const vendorCard = document.getElementById("vendor-card-" + checkbox.value);
     if (!vendorCard) return;
@@ -207,8 +250,9 @@ function syncVendorCard(checkbox) {
         vendorCard.style.display = "";
     } else {
         vendorCard.style.display = "none";
-        vendorCard.querySelector('input[type="checkbox"]').checked = false;
-        const rateInput = vendorCard.querySelector('input[type="number"]');
+        const vendorCb = vendorCard.querySelector('input[type="checkbox"]');
+        if (vendorCb) { vendorCb.checked = false; syncVendorQty(vendorCb); }
+        const rateInput = vendorCard.querySelector('.vendor-price');
         if (rateInput) rateInput.value = "";
     }
 }

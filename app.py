@@ -267,6 +267,26 @@ def init_db():
             conn.execute(
                 "ALTER TABLE outside_items ADD COLUMN balance DOUBLE PRECISION"
             )
+
+        rental_items_qty_exists = conn.execute("""
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='rental_items' AND column_name='quantity'
+        """).fetchone()
+        if not rental_items_qty_exists:
+            conn.execute(
+                "ALTER TABLE rental_items ADD COLUMN quantity INTEGER DEFAULT 1"
+            )
+
+        outside_items_qty_exists = conn.execute("""
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='outside_items' AND column_name='quantity'
+        """).fetchone()
+        if not outside_items_qty_exists:
+            conn.execute(
+                "ALTER TABLE outside_items ADD COLUMN quantity INTEGER DEFAULT 1"
+            )
     else:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS users(
@@ -382,6 +402,26 @@ def init_db():
         if "balance" not in outside_cols:
             conn.execute(
                 "ALTER TABLE outside_items ADD COLUMN balance REAL"
+            )
+
+        rental_cols2 = [
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(rental_items)"
+            ).fetchall()
+        ]
+        if "quantity" not in rental_cols2:
+            conn.execute(
+                "ALTER TABLE rental_items ADD COLUMN quantity INTEGER DEFAULT 1"
+            )
+
+        outside_cols2 = [
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(outside_items)"
+            ).fetchall()
+        ]
+        if "quantity" not in outside_cols2:
+            conn.execute(
+                "ALTER TABLE outside_items ADD COLUMN quantity INTEGER DEFAULT 1"
             )
 
     conn.execute("""
@@ -1033,14 +1073,19 @@ def save_rental():
         if not item:
             continue
 
-        item_total = days * item["rent_per_day"]
+        try:
+            quantity = max(1, int(request.form.get(f"item_quantities[{item_id}]", 1) or 1))
+        except (ValueError, TypeError):
+            quantity = 1
+
+        item_total = days * item["rent_per_day"] * quantity
 
         total_amount += item_total
 
         conn.execute("""
         INSERT INTO rental_items
-        (tenant_id,rental_id,item_id,rate_per_day,days,total,status)
-        VALUES(?,?,?,?,?,?,?)
+        (tenant_id,rental_id,item_id,rate_per_day,days,total,status,quantity)
+        VALUES(?,?,?,?,?,?,?,?)
         """, (
             tenant_id,
             rental_id,
@@ -1048,7 +1093,8 @@ def save_rental():
             item["rent_per_day"],
             days,
             item_total,
-            "Active"
+            "Active",
+            quantity
         ))
 
         conn.execute(
@@ -1094,12 +1140,17 @@ def save_rental():
         else:
             rate_per_day = item["rent_per_day"]
 
-        vendor_total = days * rate_per_day
+        try:
+            vendor_qty = max(1, int(request.form.get(f"vendor_quantities[{vendor_item_id}]", 1) or 1))
+        except (ValueError, TypeError):
+            vendor_qty = 1
+
+        vendor_total = days * rate_per_day * vendor_qty
 
         conn.execute("""
         INSERT INTO outside_items
-        (tenant_id,rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
-        VALUES(?,?,?,?,?,?,?,?,?)
+        (tenant_id,rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance,quantity)
+        VALUES(?,?,?,?,?,?,?,?,?,?)
         """, (
             tenant_id,
             rental_id,
@@ -1109,7 +1160,8 @@ def save_rental():
             days,
             vendor_total,
             0,
-            vendor_total
+            vendor_total,
+            vendor_qty
         ))
 
     balance = total_amount - advance_paid
@@ -1392,13 +1444,18 @@ def edit_rental(rental_id):
                 if rate_per_day < 0:
                     rate_per_day = item["rent_per_day"]
 
-                item_total = rate_per_day * days
+                try:
+                    quantity = max(1, int(request.form.get(f"item_quantities[{item_id}]", 1) or 1))
+                except (ValueError, TypeError):
+                    quantity = 1
+
+                item_total = rate_per_day * days * quantity
                 total_amount += item_total
 
                 conn.execute("""
                 INSERT INTO rental_items
-                (tenant_id,rental_id,item_id,rate_per_day,days,total,status)
-                VALUES(?,?,?,?,?,?,?)
+                (tenant_id,rental_id,item_id,rate_per_day,days,total,status,quantity)
+                VALUES(?,?,?,?,?,?,?,?)
                 """, (
                     tenant_id,
                     rental_id,
@@ -1406,7 +1463,8 @@ def edit_rental(rental_id):
                     rate_per_day,
                     days,
                     item_total,
-                    status
+                    status,
+                    quantity
                 ))
 
                 conn.execute(
@@ -1436,14 +1494,19 @@ def edit_rental(rental_id):
                 if rate_per_day <= 0:
                     rate_per_day = item["rent_per_day"]
 
-                vendor_total = rate_per_day * days
+                try:
+                    vendor_qty = max(1, int(request.form.get(f"vendor_quantities[{vendor_item_id}]", 1) or 1))
+                except (ValueError, TypeError):
+                    vendor_qty = 1
+
+                vendor_total = rate_per_day * days * vendor_qty
                 paid = min(previous_outside_payments.get(item["name"], 0), vendor_total)
                 balance_due = vendor_total - paid
 
                 conn.execute("""
                 INSERT INTO outside_items
-                (tenant_id,rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance)
-                VALUES(?,?,?,?,?,?,?,?,?)
+                (tenant_id,rental_id,vendor_name,item_name,rate_per_day,days,total,paid,balance,quantity)
+                VALUES(?,?,?,?,?,?,?,?,?,?)
                 """, (
                     tenant_id,
                     rental_id,
@@ -1453,7 +1516,8 @@ def edit_rental(rental_id):
                     days,
                     vendor_total,
                     paid,
-                    balance_due
+                    balance_due,
+                    vendor_qty
                 ))
 
             balance = total_amount - advance_paid
@@ -1476,12 +1540,12 @@ def edit_rental(rental_id):
     ).fetchall()
 
     current_rental_items = conn.execute("""
-    SELECT item_id, rate_per_day
+    SELECT item_id, rate_per_day, quantity
     FROM rental_items
     WHERE rental_id=? AND tenant_id=?
     """, (rental_id, tenant_id)).fetchall()
     current_outside_items = conn.execute("""
-    SELECT vendor_name, item_name, rate_per_day
+    SELECT vendor_name, item_name, rate_per_day, quantity
     FROM outside_items
     WHERE rental_id=? AND tenant_id=?
     ORDER BY id ASC
@@ -1490,6 +1554,9 @@ def edit_rental(rental_id):
     selected_item_ids = [row["item_id"] for row in current_rental_items]
     selected_rates = {
         row["item_id"]: row["rate_per_day"] for row in current_rental_items
+    }
+    selected_quantities = {
+        row["item_id"]: (row["quantity"] or 1) for row in current_rental_items
     }
     outside_vendor_name = next(
         (
@@ -1502,6 +1569,9 @@ def edit_rental(rental_id):
     selected_vendor_item_names = [row["item_name"] for row in current_outside_items]
     selected_vendor_rates = {
         row["item_name"]: row["rate_per_day"] for row in current_outside_items
+    }
+    selected_vendor_quantities = {
+        row["item_name"]: (row["quantity"] or 1) for row in current_outside_items
     }
 
     if selected_item_ids:
@@ -1539,9 +1609,11 @@ def edit_rental(rental_id):
         vendor_items=vendor_items,
         selected_item_ids=selected_item_ids,
         selected_rates=selected_rates,
+        selected_quantities=selected_quantities,
         outside_vendor_name=outside_vendor_name,
         selected_vendor_item_names=selected_vendor_item_names,
-        selected_vendor_rates=selected_vendor_rates
+        selected_vendor_rates=selected_vendor_rates,
+        selected_vendor_quantities=selected_vendor_quantities
     )
 
 

@@ -81,7 +81,7 @@ required
 
 <label class="equipment-card">
 
-<input type="checkbox" name="item_ids" value="{{item['id']}}">
+<input type="checkbox" name="item_ids" value="{{item['id']}}" onchange="syncOwnQty(this)">
 
 <div class="equipment-info">
 
@@ -102,6 +102,12 @@ name="item_rates[{{item['id']}}]"
 placeholder="Price"
 value="{{item['rent_per_day']}}"
 />
+
+<div class="qty-stepper" id="qty-own-{{item['id']}}" style="display:none;">
+<button type="button" onclick="changeQty('qty-val-own-{{item[\'id\']}}', -1)">-</button>
+<input type="number" id="qty-val-own-{{item['id']}}" name="item_quantities[{{item['id']}}]" value="1" min="1" class="qty-input">
+<button type="button" onclick="changeQty('qty-val-own-{{item[\'id\']}}', 1)">+</button>
+</div>
 
 </label>
 
@@ -130,7 +136,7 @@ value="{{item['rent_per_day']}}"
 
 <label class="equipment-card" id="vendor-card-{{item['id']}}" style="display:none;">
 
-<input type="checkbox" name="vendor_item_ids" value="{{item['id']}}">
+<input type="checkbox" name="vendor_item_ids" value="{{item['id']}}" onchange="syncVendorQty(this)">
 
 <div class="equipment-info">
 
@@ -146,6 +152,12 @@ class="vendor-price"
 name="vendor_rates[{{item['id']}}]"
 placeholder="Price"
 />
+
+<div class="qty-stepper" id="qty-vendor-{{item['id']}}" style="display:none;">
+<button type="button" onclick="changeQty('qty-val-vendor-{{item[\'id\']}}', -1)">-</button>
+<input type="number" id="qty-val-vendor-{{item['id']}}" name="vendor_quantities[{{item['id']}}]" value="1" min="1" class="qty-input">
+<button type="button" onclick="changeQty('qty-val-vendor-{{item[\'id\']}}', 1)">+</button>
+</div>
 
 </label>
 
@@ -192,6 +204,37 @@ function syncClientPhone() {
 customerNameInput.addEventListener("change", syncClientPhone);
 customerNameInput.addEventListener("input", syncClientPhone);
 
+function changeQty(inputId, delta) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const newVal = Math.max(1, (parseInt(input.value) || 1) + delta);
+    input.value = newVal;
+}
+
+function syncOwnQty(checkbox) {
+    const stepper = document.getElementById("qty-own-" + checkbox.value);
+    if (!stepper) return;
+    if (checkbox.checked) {
+        stepper.style.display = "";
+        const input = stepper.querySelector('input[type="number"]');
+        if (input && (!input.value || input.value < 1)) input.value = 1;
+    } else {
+        stepper.style.display = "none";
+    }
+}
+
+function syncVendorQty(checkbox) {
+    const stepper = document.getElementById("qty-vendor-" + checkbox.value);
+    if (!stepper) return;
+    if (checkbox.checked) {
+        stepper.style.display = "";
+        const input = stepper.querySelector('input[type="number"]');
+        if (input && (!input.value || input.value < 1)) input.value = 1;
+    } else {
+        stepper.style.display = "none";
+    }
+}
+
 // Show/hide outside equipment cards based on own equipment selection
 document.querySelectorAll('input[name="item_ids"]').forEach(function(checkbox) {
     checkbox.addEventListener("change", function() {
@@ -201,8 +244,9 @@ document.querySelectorAll('input[name="item_ids"]').forEach(function(checkbox) {
             vendorCard.style.display = "";
         } else {
             vendorCard.style.display = "none";
-            vendorCard.querySelector('input[type="checkbox"]').checked = false;
-            const rateInput = vendorCard.querySelector('input[type="number"]');
+            const vendorCb = vendorCard.querySelector('input[type="checkbox"]');
+            if (vendorCb) { vendorCb.checked = false; syncVendorQty(vendorCb); }
+            const rateInput = vendorCard.querySelector('.vendor-price');
             if (rateInput) rateInput.value = "";
         }
     });

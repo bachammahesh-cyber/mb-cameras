@@ -526,6 +526,10 @@ border-radius:8px;
 cursor:pointer;
 }
 
+.qty-stepper{display:flex;align-items:center;gap:4px;margin-left:auto;}
+.qty-stepper button{width:24px;height:24px;padding:0;font-size:14px;line-height:1;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;}
+.qty-input{width:36px;height:24px;text-align:center;border:1px solid #ccc;border-radius:4px;font-size:13px;padding:0;}
+
 .equipment-card input[type="checkbox"]{
 width:18px;
 height:18px;
