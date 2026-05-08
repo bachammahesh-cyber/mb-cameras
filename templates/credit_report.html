@@ -20,31 +20,12 @@
 
 <div class="container">
 
+<a href="/dashboard" class="back-link">← Dashboard</a>
 <h2 class="page-title">Financials</h2>
 
 <div class="box financial-box">
-<h2>Filter Period</h2>
-<form class="financial-filter-form" method="GET" action="/credit_report">
-<div>
-<label>From Date</label>
-<input type="date" name="from_date" value="{{ filters['from_date'] }}">
-</div>
-<div>
-<label>To Date</label>
-<input type="date" name="to_date" value="{{ filters['to_date'] }}">
-</div>
-<div class="financial-filter-actions">
-<button type="submit">Apply</button>
-<a href="/credit_report" class="mini-btn mini-btn-edit">Clear</a>
-</div>
-</form>
-</div>
-
-<div class="box financial-box">
-
 <h2>Revenues</h2>
 <p class="period-label">Period: {{ revenues["period_label"] }}</p>
-
 <div class="revenue-grid">
 <div class="revenue-card">
 <h3>Customer Total</h3>
@@ -67,15 +48,22 @@
 <p>₹{{ revenues["realized_net"] }}</p>
 </div>
 </div>
-
 </div>
 
 <div class="box financial-box">
 
 <h2>Customer Dues</h2>
 
-<table class="records-table">
+<div class="filter-bar" style="margin-bottom:12px;">
+<input type="text" id="search-customer" placeholder="Search customer or ID…" oninput="filterTable('customer-tbody','search-customer')">
+<div class="status-filters">
+<button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'customer-tbody')">All</button>
+<button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'customer-tbody')">Due</button>
+<button class="filter-btn" data-bal="clear" onclick="setBalFilter(this,'customer-tbody')">Cleared</button>
+</div>
+</div>
 
+<table class="records-table">
 <thead>
 <tr>
 <th>ID</th>
@@ -87,57 +75,44 @@
 <th>Receive Amount</th>
 </tr>
 </thead>
-
-<tbody>
-
+<tbody id="customer-tbody">
 {% for r in rentals %}
-
-<tr>
-
+<tr data-search="{{ r.customer_name | lower }} {{ r.id }}"
+    data-bal="{% if r.balance > 0 %}due{% else %}clear{% endif %}">
 <td>{{r.id}}</td>
-
-<td>
-{{r.start_date[8:10]}}/{{r.start_date[5:7]}}/{{r.start_date[2:4]}}
-</td>
-
+<td>{{r.start_date[8:10]}}/{{r.start_date[5:7]}}/{{r.start_date[2:4]}}</td>
 <td>{{r.customer_name}}</td>
-
 <td>₹{{r.total_amount}}</td>
-
 <td>₹{{r.advance_paid}}</td>
-
-<td>₹{{r.balance}}</td>
-
+<td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{r.balance}}</td>
 <td>
-
 <form action="/add_payment/{{r.id}}" method="POST" style="display:flex;gap:6px;">
-
 <input name="payment" placeholder="Amount">
-
 <button>Process</button>
-
 </form>
-
 </td>
-
 </tr>
-
 {% endfor %}
-
 </tbody>
-
 </table>
+<p id="no-customer" style="display:none;padding:10px;color:#888;">No entries match.</p>
 
 </div>
-
-
 
 <div class="box financial-box">
 
 <h2>Vendor Payments</h2>
 
-<table class="records-table">
+<div class="filter-bar" style="margin-bottom:12px;">
+<input type="text" id="search-vendor" placeholder="Search vendor…" oninput="filterTable('vendor-tbody','search-vendor')">
+<div class="status-filters">
+<button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'vendor-tbody')">All</button>
+<button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'vendor-tbody')">Due</button>
+<button class="filter-btn" data-bal="clear" onclick="setBalFilter(this,'vendor-tbody')">Cleared</button>
+</div>
+</div>
 
+<table class="records-table">
 <thead>
 <tr>
 <th>Rental ID</th>
@@ -150,57 +125,38 @@
 <th>Pay Vendor</th>
 </tr>
 </thead>
-
-<tbody>
-
+<tbody id="vendor-tbody">
 {% for v in vendors %}
-
-<tr>
-
+<tr data-search="{{ v['vendor_name'] | lower }}"
+    data-bal="{% if v['balance'] > 0 %}due{% else %}clear{% endif %}">
 <td>{{ v["rental_id"] }}</td>
-
 <td>{{ v["start_date"] }}</td>
-
 <td>{{ v["vendor_name"] }}</td>
-
 <td>
 <details>
 <summary>View items ({{ v["items"]|length }})</summary>
-<ul style="margin:8px 0 0 18px; padding:0;">
+<ul style="margin:8px 0 0 18px;padding:0;">
 {% for item in v["items"] %}
-<li>{{ item.name }} - ₹{{ item.rate_per_day }}/day - {{ item.days }} day(s) - ₹{{ item.total }}</li>
+<li>{{ item.name }} — ₹{{ item.rate_per_day }}/day — {{ item.days }} day(s) — ₹{{ item.total }}</li>
 {% endfor %}
 </ul>
 </details>
 </td>
-
 <td>₹{{ v["total"] }}</td>
-
 <td>₹{{ v["paid"] }}</td>
-
-<td>₹{{ v["balance"] }}</td>
-
+<td class="{% if v['balance'] > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ v["balance"] }}</td>
 <td>
-
 <form action="/pay_vendor_group/{{ v['rental_id'] }}" method="POST" style="display:flex;gap:6px;">
-
 <input type="hidden" name="vendor_name" value="{{ v['vendor_name_raw'] }}">
-
 <input name="payment" placeholder="Amount">
-
 <button>Pay</button>
-
 </form>
-
 </td>
-
 </tr>
-
 {% endfor %}
-
 </tbody>
-
 </table>
+<p id="no-vendor" style="display:none;padding:10px;color:#888;">No entries match.</p>
 
 </div>
 
@@ -209,6 +165,41 @@
 <div class="bottom-logout-band">
 <a href="/logout">Logout</a>
 </div>
+
+<script>
+const balStates = { 'customer-tbody': 'all', 'vendor-tbody': 'all' };
+
+function setBalFilter(btn, tbodyId) {
+    btn.closest('.status-filters').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    balStates[tbodyId] = btn.dataset.bal;
+    applyTableFilter(tbodyId);
+}
+
+function filterTable(tbodyId, inputId) {
+    applyTableFilter(tbodyId);
+}
+
+function applyTableFilter(tbodyId) {
+    const inputId = tbodyId === 'customer-tbody' ? 'search-customer' : 'search-vendor';
+    const noResultsId = tbodyId === 'customer-tbody' ? 'no-customer' : 'no-vendor';
+    const search = document.getElementById(inputId).value.toLowerCase().trim();
+    const balFilter = balStates[tbodyId];
+    let visible = 0;
+
+    document.querySelectorAll('#' + tbodyId + ' tr').forEach(function(row) {
+        const rowSearch = (row.dataset.search || '').toLowerCase();
+        const rowBal = row.dataset.bal || '';
+        const matchSearch = !search || rowSearch.includes(search);
+        const matchBal = balFilter === 'all' || rowBal === balFilter;
+        const show = matchSearch && matchBal;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    document.getElementById(noResultsId).style.display = visible === 0 ? '' : 'none';
+}
+</script>
 
 </body>
 </html>
