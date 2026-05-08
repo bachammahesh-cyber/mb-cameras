@@ -86,7 +86,7 @@
 <td>₹{{r.advance_paid}}</td>
 <td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{r.balance}}</td>
 <td>
-<form action="/add_payment/{{r.id}}" method="POST" style="display:flex;gap:6px;">
+<form action="/add_payment/{{r.id}}" method="POST" style="display:flex;gap:6px;" onsubmit="return confirmAmount(this,'Receive')">
 <input name="payment" placeholder="Amount">
 <button>Process</button>
 </form>
@@ -146,7 +146,7 @@
 <td>₹{{ v["paid"] }}</td>
 <td class="{% if v['balance'] > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ v["balance"] }}</td>
 <td>
-<form action="/pay_vendor_group/{{ v['rental_id'] }}" method="POST" style="display:flex;gap:6px;">
+<form action="/pay_vendor_group/{{ v['rental_id'] }}" method="POST" style="display:flex;gap:6px;" onsubmit="return confirmAmount(this,'Pay vendor')">
 <input type="hidden" name="vendor_name" value="{{ v['vendor_name_raw'] }}">
 <input name="payment" placeholder="Amount">
 <button>Pay</button>
@@ -167,6 +167,16 @@
 </div>
 
 <script>
+function confirmAmount(form, label) {
+    const input = form.querySelector('input[name="payment"]');
+    const amount = input ? input.value.trim() : '';
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+        alert('Please enter a valid amount first.');
+        return false;
+    }
+    return confirm(label + ' ₹' + parseFloat(amount).toLocaleString('en-IN') + '?');
+}
+
 const balStates = { 'customer-tbody': 'all', 'vendor-tbody': 'all' };
 
 function setBalFilter(btn, tbodyId) {

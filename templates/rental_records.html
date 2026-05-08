@@ -93,7 +93,7 @@
 <td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ r.balance }}</td>
 <td>
 {% if r.status == 'Active' %}
-<form method="POST" action="/toggle_rental_status/{{ r.id }}">
+<form method="POST" action="/toggle_rental_status/{{ r.id }}" onsubmit="return confirm('Mark this rental as Returned?');">
 <button type="submit" class="status-toggle is-active">Rented</button>
 </form>
 {% else %}

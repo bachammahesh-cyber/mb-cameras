@@ -54,7 +54,7 @@
 
 {% if v["balance"] > 0 %}
 
-<form method="POST" action="/pay_vendor/{{ v['id'] }}">
+<form method="POST" action="/pay_vendor/{{ v['id'] }}" onsubmit="return confirmVendorPay(this)">
 
 <input type="number" name="payment" placeholder="Payment">
 
@@ -84,5 +84,15 @@
 <a href="/logout">Logout</a>
 </div>
 
+<script>
+function confirmVendorPay(form) {
+    const amount = form.querySelector('input[name="payment"]').value.trim();
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+        alert('Please enter a valid amount first.');
+        return false;
+    }
+    return confirm('Pay vendor ₹' + parseFloat(amount).toLocaleString('en-IN') + '?');
+}
+</script>
 </body>
 </html>
