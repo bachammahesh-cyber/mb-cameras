@@ -108,9 +108,9 @@ value="{{ selected_rates.get(item['id'], item['rent_per_day']) }}"
 >
 
 <div class="qty-stepper" id="qty-own-{{ item['id'] }}" {% if item['id'] not in selected_item_ids %}style="display:none;"{% endif %}>
-<button type="button" onclick="changeQty('qty-val-own-{{ item[\'id\'] }}', -1)">-</button>
+<button type="button" onclick="changeQty('qty-val-own-{{ item.id }}', -1)">-</button>
 <input type="number" id="qty-val-own-{{ item['id'] }}" name="item_quantities[{{ item['id'] }}]" value="{{ selected_quantities.get(item['id'], 1) }}" min="1" class="qty-input">
-<button type="button" onclick="changeQty('qty-val-own-{{ item[\'id\'] }}', 1)">+</button>
+<button type="button" onclick="changeQty('qty-val-own-{{ item.id }}', 1)">+</button>
 </div>
 
 </label>
@@ -168,9 +168,9 @@ value="{{ selected_vendor_rates.get(item['name'], item['rent_per_day']) }}"
 >
 
 <div class="qty-stepper" id="qty-vendor-{{ item['id'] }}" {% if item['name'] not in selected_vendor_item_names %}style="display:none;"{% endif %}>
-<button type="button" onclick="changeQty('qty-val-vendor-{{ item[\'id\'] }}', -1)">-</button>
+<button type="button" onclick="changeQty('qty-val-vendor-{{ item.id }}', -1)">-</button>
 <input type="number" id="qty-val-vendor-{{ item['id'] }}" name="vendor_quantities[{{ item['id'] }}]" value="{{ selected_vendor_quantities.get(item['name'], 1) }}" min="1" class="qty-input">
-<button type="button" onclick="changeQty('qty-val-vendor-{{ item[\'id\'] }}', 1)">+</button>
+<button type="button" onclick="changeQty('qty-val-vendor-{{ item.id }}', 1)">+</button>
 </div>
 
 </label>

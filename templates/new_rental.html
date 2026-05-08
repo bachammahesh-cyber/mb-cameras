@@ -104,9 +104,9 @@ value="{{item['rent_per_day']}}"
 />
 
 <div class="qty-stepper" id="qty-own-{{item['id']}}" style="display:none;">
-<button type="button" onclick="changeQty('qty-val-own-{{item[\'id\']}}', -1)">-</button>
+<button type="button" onclick="changeQty('qty-val-own-{{item.id}}', -1)">-</button>
 <input type="number" id="qty-val-own-{{item['id']}}" name="item_quantities[{{item['id']}}]" value="1" min="1" class="qty-input">
-<button type="button" onclick="changeQty('qty-val-own-{{item[\'id\']}}', 1)">+</button>
+<button type="button" onclick="changeQty('qty-val-own-{{item.id}}', 1)">+</button>
 </div>
 
 </label>
@@ -154,9 +154,9 @@ placeholder="Price"
 />
 
 <div class="qty-stepper" id="qty-vendor-{{item['id']}}" style="display:none;">
-<button type="button" onclick="changeQty('qty-val-vendor-{{item[\'id\']}}', -1)">-</button>
+<button type="button" onclick="changeQty('qty-val-vendor-{{item.id}}', -1)">-</button>
 <input type="number" id="qty-val-vendor-{{item['id']}}" name="vendor_quantities[{{item['id']}}]" value="1" min="1" class="qty-input">
-<button type="button" onclick="changeQty('qty-val-vendor-{{item[\'id\']}}', 1)">+</button>
+<button type="button" onclick="changeQty('qty-val-vendor-{{item.id}}', 1)">+</button>
 </div>
 
 </label>
