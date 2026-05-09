@@ -23,53 +23,36 @@
 <a href="/dashboard" class="back-link">← Dashboard</a>
 <h2 class="page-title">Financials</h2>
 
-<!-- Period selector -->
-<div class="box financial-box" style="padding-bottom:14px;">
-<div class="period-selector">
-  <a href="/credit_report" class="filter-btn {% if not filters['show_all'] and filters['month'] and not filters['from_date'] %}active{% endif %}">This Month</a>
-  <a href="/credit_report?all=1" class="filter-btn {% if filters['show_all'] %}active{% endif %}">All Time</a>
-  <button class="filter-btn {% if filters['from_date'] or (filters['month'] and not filters['show_all'] and filters['month'] != '' and filters['from_date'] == '' and filters['to_date'] == '' and not (not filters['show_all'] and filters['month'])) %}{% endif %}" onclick="toggleCustom()">Custom ▾</button>
-</div>
-<form id="custom-form" method="GET" action="/credit_report" class="custom-period-form" style="display:{% if filters['from_date'] or filters['to_date'] %}flex{% else %}none{% endif %};">
-  <input type="date" name="from_date" value="{{ filters['from_date'] }}" placeholder="From">
-  <span style="color:#888;">–</span>
-  <input type="date" name="to_date" value="{{ filters['to_date'] }}" placeholder="To">
-  <button type="submit" class="filter-btn active">Apply</button>
-</form>
-</div>
-
 <!-- Revenue cards -->
 <div class="box financial-box">
-<h2>Revenues <span class="period-label">— {{ revenues["period_label"] }}</span></h2>
+<h2 style="margin:0 0 12px;">Revenues <span class="period-label" id="rev-period-label"></span></h2>
 <div class="revenue-grid">
-<div class="revenue-card">
-<h3>Customer Total</h3>
-<p>₹{{ revenues["customer_total"] }}</p>
-</div>
-<div class="revenue-card">
-<h3>Customer Due</h3>
-<p>₹{{ revenues["customer_due"] }}</p>
-</div>
-<div class="revenue-card">
-<h3>Vendor Due</h3>
-<p>₹{{ revenues["vendor_due"] }}</p>
-</div>
-<div class="revenue-card">
-<h3>Projected Net</h3>
-<p>₹{{ revenues["projected_net"] }}</p>
-</div>
-<div class="revenue-card">
-<h3>Realized Net</h3>
-<p>₹{{ revenues["realized_net"] }}</p>
-</div>
+<div class="revenue-card"><h3>Customer Total</h3><p id="rev-customer-total">₹0</p></div>
+<div class="revenue-card"><h3>Customer Due</h3><p id="rev-customer-due">₹0</p></div>
+<div class="revenue-card"><h3>Vendor Due</h3><p id="rev-vendor-due">₹0</p></div>
+<div class="revenue-card"><h3>Projected Net</h3><p id="rev-projected-net">₹0</p></div>
+<div class="revenue-card"><h3>Realized Net</h3><p id="rev-realized-net">₹0</p></div>
 </div>
 </div>
 
 <!-- Customer Dues -->
 <div class="box financial-box">
-<h2>Customer Dues</h2>
+<div class="section-header">
+  <h2>Customer Dues</h2>
+  <div class="inline-period">
+    <button class="filter-btn active" id="c-btn-month" onclick="setCustPeriod('month')">This Month</button>
+    <button class="filter-btn" id="c-btn-all" onclick="setCustPeriod('all')">All Time</button>
+    <button class="filter-btn" id="c-btn-custom" onclick="toggleCustCustom()">Custom ▾</button>
+  </div>
+</div>
+<div id="cust-custom-row" class="inline-date-form" style="display:none;">
+  <input type="date" id="c-from">
+  <span style="color:#888;">–</span>
+  <input type="date" id="c-to">
+  <button class="filter-btn active" onclick="setCustCustom()">Apply</button>
+</div>
 <div class="filter-bar" style="margin-bottom:12px;">
-  <input type="text" id="search-customer" placeholder="Search customer or ID…" oninput="filterTable('customer-tbody','search-customer')">
+  <input type="text" id="search-customer" placeholder="Search customer or ID…" oninput="applyCustFilter()">
   <div class="status-filters">
     <button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'customer-tbody')">All</button>
     <button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'customer-tbody')">Due</button>
@@ -85,7 +68,11 @@
 <tbody id="customer-tbody">
 {% for r in rentals %}
 <tr data-search="{{ r.customer_name | lower }} {{ r.id }}"
-    data-bal="{% if r.balance > 0 %}due{% else %}clear{% endif %}">
+    data-bal="{% if r.balance > 0 %}due{% else %}clear{% endif %}"
+    data-date="{{ r.start_date }}"
+    data-total="{{ r.total_amount or 0 }}"
+    data-paid="{{ r.advance_paid or 0 }}"
+    data-balance="{{ r.balance or 0 }}">
 <td>{{ r.id }}</td>
 <td>{{ r.start_date[8:10] }}/{{ r.start_date[5:7] }}/{{ r.start_date[2:4] }}</td>
 <td>{{ r.customer_name }}</td>
@@ -107,9 +94,22 @@
 
 <!-- Vendor Payments -->
 <div class="box financial-box">
-<h2>Vendor Payments</h2>
+<div class="section-header">
+  <h2>Vendor Payments</h2>
+  <div class="inline-period">
+    <button class="filter-btn active" id="v-btn-month" onclick="setVendPeriod('month')">This Month</button>
+    <button class="filter-btn" id="v-btn-all" onclick="setVendPeriod('all')">All Time</button>
+    <button class="filter-btn" id="v-btn-custom" onclick="toggleVendCustom()">Custom ▾</button>
+  </div>
+</div>
+<div id="vend-custom-row" class="inline-date-form" style="display:none;">
+  <input type="date" id="v-from">
+  <span style="color:#888;">–</span>
+  <input type="date" id="v-to">
+  <button class="filter-btn active" onclick="setVendCustom()">Apply</button>
+</div>
 <div class="filter-bar" style="margin-bottom:12px;">
-  <input type="text" id="search-vendor" placeholder="Search vendor…" oninput="filterTable('vendor-tbody','search-vendor')">
+  <input type="text" id="search-vendor" placeholder="Search vendor…" oninput="applyVendFilter()">
   <div class="status-filters">
     <button class="filter-btn active" data-bal="all" onclick="setBalFilter(this,'vendor-tbody')">All</button>
     <button class="filter-btn" data-bal="due" onclick="setBalFilter(this,'vendor-tbody')">Due</button>
@@ -125,7 +125,11 @@
 <tbody id="vendor-tbody">
 {% for v in vendors %}
 <tr data-search="{{ v['vendor_name'] | lower }}"
-    data-bal="{% if v['balance'] > 0 %}due{% else %}clear{% endif %}">
+    data-bal="{% if v['balance'] > 0 %}due{% else %}clear{% endif %}"
+    data-date="{{ v['start_date'] }}"
+    data-vtotal="{{ v['total'] or 0 }}"
+    data-vpaid="{{ v['paid'] or 0 }}"
+    data-vbalance="{{ v['balance'] or 0 }}">
 <td>{{ v["rental_id"] }}</td>
 <td>{{ v["start_date"][8:10] }}/{{ v["start_date"][5:7] }}/{{ v["start_date"][2:4] }}</td>
 <td>{{ v["vendor_name"] }}</td>
@@ -163,9 +167,141 @@
 </div>
 
 <script>
-function toggleCustom() {
-    const f = document.getElementById('custom-form');
-    f.style.display = f.style.display === 'none' ? 'flex' : 'none';
+const INR = n => '₹' + parseFloat(n || 0).toLocaleString('en-IN');
+
+let custFrom = '', custTo = '';
+let vendFrom = '', vendTo = '';
+const balStates = { 'customer-tbody': 'all', 'vendor-tbody': 'all' };
+
+function getMonthRange() {
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth();
+    return {
+        from: new Date(y, m, 1).toISOString().slice(0, 10),
+        to: new Date(y, m + 1, 0).toISOString().slice(0, 10)
+    };
+}
+
+// --- Customer period ---
+function setCustPeriod(mode) {
+    if (mode === 'month') { const r = getMonthRange(); custFrom = r.from; custTo = r.to; }
+    else { custFrom = ''; custTo = ''; }
+    document.getElementById('cust-custom-row').style.display = 'none';
+    document.getElementById('c-btn-month').classList.toggle('active', mode === 'month');
+    document.getElementById('c-btn-all').classList.toggle('active', mode === 'all');
+    document.getElementById('c-btn-custom').classList.remove('active');
+    applyCustFilter();
+}
+
+function toggleCustCustom() {
+    const row = document.getElementById('cust-custom-row');
+    row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+}
+
+function setCustCustom() {
+    custFrom = document.getElementById('c-from').value;
+    custTo = document.getElementById('c-to').value;
+    document.getElementById('c-btn-month').classList.remove('active');
+    document.getElementById('c-btn-all').classList.remove('active');
+    document.getElementById('c-btn-custom').classList.add('active');
+    applyCustFilter();
+}
+
+function applyCustFilter() {
+    const search = document.getElementById('search-customer').value.toLowerCase().trim();
+    const bal = balStates['customer-tbody'];
+    let vis = 0;
+    document.querySelectorAll('#customer-tbody tr').forEach(row => {
+        const date = row.dataset.date || '';
+        const matchDate = (!custFrom || date >= custFrom) && (!custTo || date <= custTo);
+        const matchSearch = !search || (row.dataset.search || '').includes(search);
+        const matchBal = bal === 'all' || row.dataset.bal === bal;
+        const show = matchDate && matchSearch && matchBal;
+        row.style.display = show ? '' : 'none';
+        if (show) vis++;
+    });
+    document.getElementById('no-customer').style.display = vis === 0 ? '' : 'none';
+    updateRevenue();
+}
+
+// --- Vendor period ---
+function setVendPeriod(mode) {
+    if (mode === 'month') { const r = getMonthRange(); vendFrom = r.from; vendTo = r.to; }
+    else { vendFrom = ''; vendTo = ''; }
+    document.getElementById('vend-custom-row').style.display = 'none';
+    document.getElementById('v-btn-month').classList.toggle('active', mode === 'month');
+    document.getElementById('v-btn-all').classList.toggle('active', mode === 'all');
+    document.getElementById('v-btn-custom').classList.remove('active');
+    applyVendFilter();
+}
+
+function toggleVendCustom() {
+    const row = document.getElementById('vend-custom-row');
+    row.style.display = row.style.display === 'none' ? 'flex' : 'none';
+}
+
+function setVendCustom() {
+    vendFrom = document.getElementById('v-from').value;
+    vendTo = document.getElementById('v-to').value;
+    document.getElementById('v-btn-month').classList.remove('active');
+    document.getElementById('v-btn-all').classList.remove('active');
+    document.getElementById('v-btn-custom').classList.add('active');
+    applyVendFilter();
+}
+
+function applyVendFilter() {
+    const search = document.getElementById('search-vendor').value.toLowerCase().trim();
+    const bal = balStates['vendor-tbody'];
+    let vis = 0;
+    document.querySelectorAll('#vendor-tbody tr').forEach(row => {
+        const date = row.dataset.date || '';
+        const matchDate = (!vendFrom || date >= vendFrom) && (!vendTo || date <= vendTo);
+        const matchSearch = !search || (row.dataset.search || '').includes(search);
+        const matchBal = bal === 'all' || row.dataset.bal === bal;
+        const show = matchDate && matchSearch && matchBal;
+        row.style.display = show ? '' : 'none';
+        if (show) vis++;
+    });
+    document.getElementById('no-vendor').style.display = vis === 0 ? '' : 'none';
+    updateRevenue();
+}
+
+// --- Balance filter ---
+function setBalFilter(btn, tbodyId) {
+    btn.closest('.status-filters').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    balStates[tbodyId] = btn.dataset.bal;
+    tbodyId === 'customer-tbody' ? applyCustFilter() : applyVendFilter();
+}
+
+// --- Revenue recalc ---
+function updateRevenue() {
+    let cTotal = 0, cPaid = 0, cDue = 0;
+    document.querySelectorAll('#customer-tbody tr').forEach(row => {
+        if (row.style.display !== 'none') {
+            cTotal += parseFloat(row.dataset.total || 0);
+            cPaid += parseFloat(row.dataset.paid || 0);
+            cDue += parseFloat(row.dataset.balance || 0);
+        }
+    });
+    let vTotal = 0, vPaid = 0, vDue = 0;
+    document.querySelectorAll('#vendor-tbody tr').forEach(row => {
+        if (row.style.display !== 'none') {
+            vTotal += parseFloat(row.dataset.vtotal || 0);
+            vPaid += parseFloat(row.dataset.vpaid || 0);
+            vDue += parseFloat(row.dataset.vbalance || 0);
+        }
+    });
+    document.getElementById('rev-customer-total').textContent = INR(cTotal);
+    document.getElementById('rev-customer-due').textContent = INR(cDue);
+    document.getElementById('rev-vendor-due').textContent = INR(vDue);
+    document.getElementById('rev-projected-net').textContent = INR(cTotal - vTotal);
+    document.getElementById('rev-realized-net').textContent = INR(cPaid - vPaid);
+
+    const custLabel = custFrom || custTo
+        ? (custFrom && custTo ? custFrom + ' – ' + custTo : custFrom || custTo)
+        : (!document.getElementById('c-btn-all').classList.contains('active') ? 'This Month' : 'All Time');
+    document.getElementById('rev-period-label').textContent = '— ' + custLabel;
 }
 
 function confirmAmount(form, label) {
@@ -178,34 +314,9 @@ function confirmAmount(form, label) {
     return confirm(label + ' ₹' + parseFloat(amount).toLocaleString('en-IN') + '?');
 }
 
-const balStates = { 'customer-tbody': 'all', 'vendor-tbody': 'all' };
-
-function setBalFilter(btn, tbodyId) {
-    btn.closest('.status-filters').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    balStates[tbodyId] = btn.dataset.bal;
-    applyTableFilter(tbodyId);
-}
-
-function filterTable(tbodyId) {
-    applyTableFilter(tbodyId);
-}
-
-function applyTableFilter(tbodyId) {
-    const inputId = tbodyId === 'customer-tbody' ? 'search-customer' : 'search-vendor';
-    const noResultsId = tbodyId === 'customer-tbody' ? 'no-customer' : 'no-vendor';
-    const search = document.getElementById(inputId).value.toLowerCase().trim();
-    const balFilter = balStates[tbodyId];
-    let visible = 0;
-    document.querySelectorAll('#' + tbodyId + ' tr').forEach(function(row) {
-        const rowSearch = (row.dataset.search || '').toLowerCase();
-        const rowBal = row.dataset.bal || '';
-        const show = (!search || rowSearch.includes(search)) && (balFilter === 'all' || rowBal === balFilter);
-        row.style.display = show ? '' : 'none';
-        if (show) visible++;
-    });
-    document.getElementById(noResultsId).style.display = visible === 0 ? '' : 'none';
-}
+// Default: current month for both sections
+setCustPeriod('month');
+setVendPeriod('month');
 </script>
 
 </body>

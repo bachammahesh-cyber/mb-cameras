@@ -345,11 +345,14 @@ TABLES
 .filter-btn{padding:6px 14px;border:1px solid #dde3ea;border-radius:20px;background:#fff;font-size:13px;cursor:pointer;color:#555;}
 .filter-btn.active{background:#1e40af;color:#fff;border-color:#1e40af;}
 
-/* Period selector (Financials) */
-.period-selector{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
-.period-selector a{text-decoration:none;}
-.custom-period-form{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;}
-.custom-period-form input[type="date"]{padding:7px 10px;border:1px solid #dde3ea;border-radius:8px;font-size:14px;}
+/* Section header (title + inline period selector) */
+.section-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+.section-header h2{margin:0;}
+.inline-period{display:flex;gap:6px;flex-wrap:wrap;}
+.inline-date-form{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.inline-date-form input[type="date"]{padding:6px 8px;border:1px solid #dde3ea;border-radius:8px;font-size:13px;}
+
+/* Period label (Revenue section) */
 .period-label{font-size:14px;color:#64748b;font-weight:400;}
 
 /* Balance colours */

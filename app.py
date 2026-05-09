@@ -1669,96 +1669,23 @@ def credit_report():
     if "user_id" not in session:
         return redirect("/")
 
-    show_all = request.args.get("all", "").strip() == "1"
-    month = request.args.get("month", "").strip()
-    from_date = request.args.get("from_date", "").strip()
-    to_date = request.args.get("to_date", "").strip()
-
-    # Default to current month when no filters are specified
-    if not show_all and not month and not from_date and not to_date:
-        month = datetime.now().strftime("%Y-%m")
-
-    selected_month = ""
-    period_label = "All time"
-
-    if month:
-        try:
-            month_start = datetime.strptime(month, "%Y-%m")
-            next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
-            month_end = next_month - timedelta(days=1)
-            from_date = month_start.strftime("%Y-%m-%d")
-            to_date = month_end.strftime("%Y-%m-%d")
-            selected_month = month
-            period_label = month_start.strftime("%B %Y")
-        except ValueError:
-            month = ""
-
-    parsed_from = None
-    parsed_to = None
-    if from_date:
-        try:
-            parsed_from = datetime.strptime(from_date, "%Y-%m-%d")
-        except ValueError:
-            from_date = ""
-    if to_date:
-        try:
-            parsed_to = datetime.strptime(to_date, "%Y-%m-%d")
-        except ValueError:
-            to_date = ""
-
-    if parsed_from and parsed_to and parsed_from > parsed_to:
-        from_date, to_date = to_date, from_date
-        parsed_from, parsed_to = parsed_to, parsed_from
-
-    if not month and from_date and to_date:
-        period_label = f"{from_date} to {to_date}"
-    elif not month and from_date:
-        period_label = f"From {from_date}"
-    elif not month and to_date:
-        period_label = f"Up to {to_date}"
-
-    rental_where = []
-    rental_params = [current_tenant_id()]
-    if from_date:
-        rental_where.append("start_date >= ?")
-        rental_params.append(from_date)
-    if to_date:
-        rental_where.append("start_date <= ?")
-        rental_params.append(to_date)
-
-    rental_where_sql = "WHERE tenant_id=?"
-    if rental_where:
-        rental_where_sql += " AND " + " AND ".join(rental_where)
-
+    tenant_id = current_tenant_id()
     conn = get_db()
 
     rentals = conn.execute(
-        f"SELECT * FROM rentals {rental_where_sql} ORDER BY start_date DESC, id DESC",
-        tuple(rental_params)
+        "SELECT * FROM rentals WHERE tenant_id=? ORDER BY start_date DESC, id DESC",
+        (tenant_id,)
     ).fetchall()
 
-    vendor_where = []
-    vendor_params = [current_tenant_id()]
-    if from_date:
-        vendor_where.append("r.start_date >= ?")
-        vendor_params.append(from_date)
-    if to_date:
-        vendor_where.append("r.start_date <= ?")
-        vendor_params.append(to_date)
-
-    vendor_where_sql = "WHERE oi.tenant_id=?"
-    if vendor_where:
-        vendor_where_sql += " AND " + " AND ".join(vendor_where)
-
     vendor_rows = conn.execute(
-        f"""
+        """
         SELECT oi.*, r.start_date
         FROM outside_items oi
         JOIN rentals r ON r.id = oi.rental_id
-        {vendor_where_sql}
+        WHERE oi.tenant_id=?
         ORDER BY r.start_date DESC, oi.id DESC
         """,
-        tuple(vendor_params)
+        (tenant_id,)
     ).fetchall()
 
     conn.close()
@@ -1799,36 +1726,10 @@ def credit_report():
             "total": row_total
         })
 
-    customer_total = sum((r["total_amount"] or 0) for r in rentals)
-    customer_paid = sum((r["advance_paid"] or 0) for r in rentals)
-    customer_due = sum((r["balance"] or 0) for r in rentals)
-    vendor_total = sum((v["total"] or 0) for v in grouped_vendors)
-    vendor_paid = sum((v["paid"] or 0) for v in grouped_vendors)
-    vendor_due = sum((v["balance"] or 0) for v in grouped_vendors)
-
-    revenues = {
-        "period_label": period_label,
-        "customer_total": customer_total,
-        "customer_paid": customer_paid,
-        "customer_due": customer_due,
-        "vendor_total": vendor_total,
-        "vendor_paid": vendor_paid,
-        "vendor_due": vendor_due,
-        "projected_net": customer_total - vendor_total,
-        "realized_net": customer_paid - vendor_paid
-    }
-
     return render_template(
         "credit_report.html",
         rentals=rentals,
         vendors=grouped_vendors,
-        revenues=revenues,
-        filters={
-            "month": selected_month,
-            "from_date": from_date,
-            "to_date": to_date,
-            "show_all": show_all
-        }
     )
 
 
