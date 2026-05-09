@@ -342,10 +342,11 @@ TABLES
 .filter-bar input[type="date"]{padding:7px 10px;border:1px solid #dde3ea;border-radius:8px;font-size:14px;}
 .status-filters{display:flex;gap:6px;}
 .date-filters{display:flex;align-items:center;gap:6px;color:#888;font-size:13px;}
-.filter-btn{padding:5px 12px;border:1px solid #dde3ea;border-radius:20px;background:#fff;font-size:13px;cursor:pointer;color:#555;}
+.filter-btn{padding:5px 12px;border:1px solid #dde3ea;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#555;}
 .filter-btn.active{background:#1e40af;color:#fff;border-color:#1e40af;}
 .filter-btn.is-bal.active{background:#0d9488;border-color:#0d9488;color:#fff;}
-.filter-bar input[type="date"]{padding:5px 8px;border:1px solid #dde3ea;border-radius:8px;font-size:13px;}
+.filter-bar input[type="date"]{padding:5px 8px;border:1px solid #dde3ea;border-radius:6px;font-size:13px;}
+.filter-divider{width:1px;height:20px;background:#dde3ea;margin:0 2px;align-self:center;}
 
 /* Period label (Revenue section) */
 .period-label{font-size:14px;color:#64748b;font-weight:400;}

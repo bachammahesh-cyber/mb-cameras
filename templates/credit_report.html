@@ -28,7 +28,7 @@
 <h2 style="margin:0 0 10px;">Revenues</h2>
 <div class="filter-bar" style="margin-bottom:12px;">
   <div class="status-filters">
-    <button class="filter-btn active" id="r-btn-month" onclick="setRevPeriod('month')">This Month</button>
+    <button class="filter-btn active" id="r-btn-month" onclick="setRevPeriod('month')"></button>
     <button class="filter-btn" id="r-btn-all" onclick="setRevPeriod('all')">All Time</button>
   </div>
   <div class="date-filters">
@@ -52,9 +52,10 @@
 <div class="filter-bar" style="margin-bottom:12px;">
   <input type="text" id="search-customer" placeholder="Search customer or ID…" oninput="applyCustFilter()">
   <div class="status-filters">
-    <button class="filter-btn active" id="c-btn-month" onclick="setCustPeriod('month')">This Month</button>
+    <button class="filter-btn active" id="c-btn-month" onclick="setCustPeriod('month')"></button>
     <button class="filter-btn" id="c-btn-all" onclick="setCustPeriod('all')">All Time</button>
   </div>
+  <span class="filter-divider"></span>
   <div class="status-filters">
     <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this,'customer-tbody')">All</button>
     <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this,'customer-tbody')">Due</button>
@@ -105,9 +106,10 @@
 <div class="filter-bar" style="margin-bottom:12px;">
   <input type="text" id="search-vendor" placeholder="Search vendor…" oninput="applyVendFilter()">
   <div class="status-filters">
-    <button class="filter-btn active" id="v-btn-month" onclick="setVendPeriod('month')">This Month</button>
+    <button class="filter-btn active" id="v-btn-month" onclick="setVendPeriod('month')"></button>
     <button class="filter-btn" id="v-btn-all" onclick="setVendPeriod('all')">All Time</button>
   </div>
+  <span class="filter-divider"></span>
   <div class="status-filters">
     <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this,'vendor-tbody')">All</button>
     <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this,'vendor-tbody')">Due</button>
@@ -199,6 +201,9 @@ function getMonthRange() {
         to: new Date(y, m + 1, 0).toISOString().slice(0, 10)
     };
 }
+
+const MONTH_LABEL = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+['r-btn-month','c-btn-month','v-btn-month'].forEach(id => { document.getElementById(id).textContent = MONTH_LABEL; });
 
 // --- Revenue period ---
 function setRevPeriod(mode) {

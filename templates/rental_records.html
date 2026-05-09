@@ -31,7 +31,7 @@
     <button class="filter-btn" data-status="Returned" onclick="setStatus(this)">Returned</button>
   </div>
   <div class="status-filters">
-    <button class="filter-btn" id="btn-this-month" onclick="setThisMonth()">This Month</button>
+    <button class="filter-btn" id="btn-this-month" onclick="setThisMonth()"></button>
     <button class="filter-btn" id="btn-all-time" onclick="setAllTime()">All Time</button>
   </div>
   <div class="date-filters">
@@ -135,6 +135,8 @@
 
 <script>
 let activeStatus = "all";
+
+document.getElementById('btn-this-month').textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
 
 function getMonthRange() {
     const now = new Date();
