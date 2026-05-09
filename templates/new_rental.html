@@ -41,9 +41,9 @@
     <span style="font-size:12px;color:#94a3b8;">No Quick IDs set yet — go to Inventory → Edit each item to assign one.</span>
     {% endif %}
   </div>
-  <div class="qe-example"><span class="qe-example-label">e.g.</span> Rahul 9876543210 10/5-15/5 items:s3*2,tripod paid:2000 vendor:Raju vitems:tripod</div>
+  <div class="qe-example"><span class="qe-example-label">e.g.</span> Rahul 9876543210 10/5-15/5 items:s3,fx3(2),tripod,lens paid:2000 vendor:Raju vitems:tripod,lens(2)</div>
   <textarea id="qe-text" class="qe-textarea" rows="2" placeholder="Type your entry here…"></textarea>
-  <div class="qe-hint">Name  ·  Phone  ·  DD/MM-DD/MM  ·  items:ID*qty,...  ·  paid:Amount  ·  vendor:Name  vitems:ID*qty,...</div>
+  <div class="qe-hint">No bracket = qty 1 &nbsp;·&nbsp; ID(qty) for more than one &nbsp;·&nbsp; vitems must be a subset of items</div>
   <div class="qe-actions">
     <button type="button" class="qe-fill-btn" onclick="fillFromQuick()">Fill Form ↓</button>
     <span id="qe-msg" class="qe-msg"></span>
@@ -320,13 +320,14 @@ function fillFromQuick() {
     const paidM = text.match(/\b(?:paid|advance)\s*[:\s]\s*(\d+)/i);
     if (paidM) { document.getElementById('qe_advance').value = paidM[1]; filled.push('paid'); }
 
-    // Own items — resolve custom_id*qty tokens to numeric ids
-    const itemsM = text.match(/\bitems?\s*[:\s]\s*([A-Za-z0-9,_*\s]+?)(?=\s+(?:paid|advance|vendor|vitems?|$)|\s*$)/i);
+    // Own items — format: id or id(qty)
+    const itemsM = text.match(/\bitems?\s*[:\s]\s*([A-Za-z0-9,_()\s]+?)(?=\s+(?:paid|advance|vendor|vitems?)|$)/i);
     if (itemsM) {
         itemsM[1].split(/[\s,]+/).filter(Boolean).forEach(function(token) {
-            const parts = token.split('*');
-            const qid = parts[0].toLowerCase();
-            const qty = parts[1] ? Math.max(1, parseInt(parts[1]) || 1) : 1;
+            const m = token.match(/^([A-Za-z0-9_]+)(?:\((\d+)\))?$/);
+            if (!m) return;
+            const qid = m[1].toLowerCase();
+            const qty = m[2] ? Math.max(1, parseInt(m[2])) : 1;
             const numId = qeIdMap[qid];
             if (numId === undefined) return;
             const cb = document.querySelector('input[name="item_ids"][value="' + numId + '"]');
@@ -336,7 +337,7 @@ function fillFromQuick() {
                 syncOwnQty(cb);
                 const qtyInput = document.getElementById('qty-val-own-' + numId);
                 if (qtyInput) qtyInput.value = qty;
-                filled.push(qty > 1 ? qid + '×' + qty : qid);
+                filled.push(qty > 1 ? qid + '(' + qty + ')' : qid);
             }
         });
     }
@@ -345,13 +346,14 @@ function fillFromQuick() {
     const vendorM = text.match(/\bvendor\s*[:\s]\s*(\S+)/i);
     if (vendorM) { document.getElementById('qe_vendor_name').value = vendorM[1]; filled.push('vendor'); }
 
-    // Vendor items — resolve custom_id*qty tokens
-    const vitemsM = text.match(/\bvitems?\s*[:\s]\s*([A-Za-z0-9,_*\s]+?)(?=\s*$)/i);
+    // Vendor items — format: id or id(qty)
+    const vitemsM = text.match(/\bvitems?\s*[:\s]\s*([A-Za-z0-9,_()\s]+?)(?=\s*$)/i);
     if (vitemsM) {
         vitemsM[1].split(/[\s,]+/).filter(Boolean).forEach(function(token) {
-            const parts = token.split('*');
-            const qid = parts[0].toLowerCase();
-            const qty = parts[1] ? Math.max(1, parseInt(parts[1]) || 1) : 1;
+            const m = token.match(/^([A-Za-z0-9_]+)(?:\((\d+)\))?$/);
+            if (!m) return;
+            const qid = m[1].toLowerCase();
+            const qty = m[2] ? Math.max(1, parseInt(m[2])) : 1;
             const numId = qeIdMap[qid];
             if (numId === undefined) return;
             const card = document.getElementById('vendor-card-' + numId);
@@ -364,7 +366,7 @@ function fillFromQuick() {
                     const vQtyInput = document.getElementById('qty-val-vendor-' + numId);
                     if (vQtyInput) vQtyInput.value = qty;
                 }
-                filled.push('v:' + (qty > 1 ? qid + '×' + qty : qid));
+                filled.push('v:' + (qty > 1 ? qid + '(' + qty + ')' : qid));
             }
         });
     }
