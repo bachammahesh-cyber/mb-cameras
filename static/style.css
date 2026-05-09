@@ -883,19 +883,27 @@ font-size:16px;
 .records-table{overflow-x:auto;}
 
 /* ── cust-dues-table: show Date(2) Customer(3) Balance(6) Receive(7) ── */
+/* records-table class hides 2,6,7 — override them back to visible */
 #cust-dues-table th:nth-child(1),#cust-dues-table td:nth-child(1){display:none;}
+#cust-dues-table th:nth-child(2),#cust-dues-table td:nth-child(2){display:table-cell;}
 #cust-dues-table th:nth-child(4),#cust-dues-table td:nth-child(4){display:none;}
 #cust-dues-table th:nth-child(5),#cust-dues-table td:nth-child(5){display:none;}
-#cust-dues-table th,.cust-dues-table td{padding:10px 8px;font-size:13px;}
+#cust-dues-table th:nth-child(6),#cust-dues-table td:nth-child(6){display:table-cell;}
+#cust-dues-table th:nth-child(7),#cust-dues-table td:nth-child(7){display:table-cell;}
+#cust-dues-table th,#cust-dues-table td{padding:10px 8px;font-size:13px;}
 #cust-dues-table td:nth-child(7) form{display:flex;gap:4px;}
 #cust-dues-table td:nth-child(7) form input{width:70px;min-width:0;}
 #cust-dues-table td:nth-child(7) form button{white-space:nowrap;padding:0 8px;}
 
 /* ── vendor-table: show Date(2) Vendor(3) Balance(7) Pay(8) ── */
+/* records-table class hides 2,7,8 — override them back to visible */
 #vendor-table th:nth-child(1),#vendor-table td:nth-child(1){display:none;}
+#vendor-table th:nth-child(2),#vendor-table td:nth-child(2){display:table-cell;}
 #vendor-table th:nth-child(4),#vendor-table td:nth-child(4){display:none;}
 #vendor-table th:nth-child(5),#vendor-table td:nth-child(5){display:none;}
 #vendor-table th:nth-child(6),#vendor-table td:nth-child(6){display:none;}
+#vendor-table th:nth-child(7),#vendor-table td:nth-child(7){display:table-cell;}
+#vendor-table th:nth-child(8),#vendor-table td:nth-child(8){display:table-cell;}
 #vendor-table th,#vendor-table td{padding:10px 8px;font-size:13px;}
 #vendor-table td:nth-child(8) form{display:flex;gap:4px;}
 #vendor-table td:nth-child(8) form input{width:70px;min-width:0;}
