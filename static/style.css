@@ -584,6 +584,27 @@ color:#777;
 }
 
 /* ------------------------
+QUICK ENTRY (beta)
+------------------------ */
+
+.qe-card{border:1px dashed #93c5fd;background:#f0f7ff;}
+.qe-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.qe-title{font-weight:700;font-size:15px;color:#0b3f6f;}
+.qe-beta{font-size:10px;font-weight:600;background:#dbeafe;color:#1e40af;border-radius:4px;padding:2px 5px;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:0.05em;}
+.qe-toggle{font-size:12px;padding:3px 10px;background:#e0eeff;color:#0b3f6f;border:1px solid #93c5fd;border-radius:6px;cursor:pointer;min-height:auto;}
+.qe-toggle:hover{background:#c7deff;}
+.qe-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.eq-chip{background:#fff;border:1px solid #bfdbfe;border-radius:5px;padding:3px 8px;font-size:12px;color:#1e3a5f;}
+.eq-chip strong{color:#1e40af;margin-right:3px;}
+.qe-textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #93c5fd;border-radius:6px;font-size:14px;font-family:inherit;resize:none;background:#fff;}
+.qe-textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.15);}
+.qe-hint{font-size:11px;color:#94a3b8;margin:6px 0 10px;letter-spacing:0.01em;}
+.qe-actions{display:flex;align-items:center;gap:12px;}
+.qe-fill-btn{padding:8px 20px;background:#0b3f6f;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;min-height:auto;}
+.qe-fill-btn:hover{background:#0d4f8a;}
+.qe-msg{font-size:13px;}
+
+/* ------------------------
 VENDOR PRICE BOX
 ------------------------ */
 

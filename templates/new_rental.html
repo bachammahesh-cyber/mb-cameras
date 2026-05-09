@@ -24,6 +24,28 @@
 
 <div class="container">
 
+<!-- Quick Entry (beta) -->
+<div class="card qe-card">
+<div class="qe-header">
+  <span class="qe-title">Quick Entry <span class="qe-beta">beta</span></span>
+  <button type="button" class="qe-toggle" onclick="toggleQE(this)">▲ Hide</button>
+</div>
+<div id="qe-body">
+  <div class="qe-chips">
+    {% for item in items %}
+    <span class="eq-chip"><strong>{{ item['id'] }}</strong> {{ item['name'] }}</span>
+    {% endfor %}
+  </div>
+  <textarea id="qe-text" class="qe-textarea" rows="2"
+    placeholder="Rahul 9876543210 10/5-15/5 items:2,5 paid:2000 vendor:Raju vitems:8"></textarea>
+  <div class="qe-hint">Name  ·  10-digit phone  ·  DD/MM-DD/MM  ·  items:IDs  ·  paid:Amount  ·  vendor:Name  vitems:IDs</div>
+  <div class="qe-actions">
+    <button type="button" class="qe-fill-btn" onclick="fillFromQuick()">Fill Form ↓</button>
+    <span id="qe-msg" class="qe-msg"></span>
+  </div>
+</div>
+</div>
+
 <div class="card">
 
 <a href="/dashboard" class="back-link">← Dashboard</a>
@@ -54,15 +76,15 @@ required
 
 
 <label>Start Date</label>
-<input type="date" name="start_date" required>
+<input type="date" name="start_date" id="qe_start_date" required>
 
 
 <label>End Date</label>
-<input type="date" name="end_date" required>
+<input type="date" name="end_date" id="qe_end_date" required>
 
 
 <label>Advance Paid</label>
-<input type="number" name="advance_paid" required>
+<input type="number" name="advance_paid" id="qe_advance" required>
 
 
 </div>
@@ -124,7 +146,7 @@ value="{{item['rent_per_day']}}"
 <h3>Outside Equipment (Vendor)</h3>
 
 <label>Vendor Name</label>
-<input type="text" name="vendor_name">
+<input type="text" name="vendor_name" id="qe_vendor_name">
 
 
 <div class="equipment-grid">
@@ -235,6 +257,99 @@ function syncVendorQty(checkbox) {
         stepper.style.display = "none";
     }
 }
+
+// ── Quick Entry (beta) ──────────────────────────────────────────────
+function toggleQE(btn) {
+    const body = document.getElementById('qe-body');
+    const hidden = body.style.display === 'none';
+    body.style.display = hidden ? '' : 'none';
+    btn.textContent = hidden ? '▲ Hide' : '▼ Show';
+}
+
+function qeParseDates(text) {
+    const y = new Date().getFullYear();
+    // DD/MM-DD/MM  or  DD/MM to DD/MM
+    let m = text.match(/(\d{1,2})[\/](\d{1,2})\s*(?:-|–|to)\s*(\d{1,2})[\/](\d{1,2})/i);
+    if (m) return [
+        `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`,
+        `${y}-${m[4].padStart(2,'0')}-${m[3].padStart(2,'0')}`
+    ];
+    // DD-DD/MM  (same month shorthand, e.g. 10-15/5)
+    m = text.match(/(\d{1,2})\s*-\s*(\d{1,2})[\/](\d{1,2})/);
+    if (m) return [
+        `${y}-${m[3].padStart(2,'0')}-${m[1].padStart(2,'0')}`,
+        `${y}-${m[3].padStart(2,'0')}-${m[2].padStart(2,'0')}`
+    ];
+    return ['', ''];
+}
+
+function fillFromQuick() {
+    const text = document.getElementById('qe-text').value.trim();
+    const msg  = document.getElementById('qe-msg');
+    if (!text) { msg.textContent = ''; return; }
+
+    const filled = [];
+
+    // Phone — 10 consecutive digits
+    const phoneM = text.match(/\b(\d{10})\b/);
+    if (phoneM) {
+        document.getElementById('phone').value = phoneM[1];
+        filled.push('phone');
+        // Name = everything before the phone number
+        const name = text.slice(0, text.indexOf(phoneM[1])).replace(/[,\s]+$/, '').trim();
+        if (name) { document.getElementById('customer_name').value = name; filled.push('name'); }
+    }
+
+    // Dates
+    const [sd, ed] = qeParseDates(text);
+    if (sd) { document.getElementById('qe_start_date').value = sd; filled.push('start'); }
+    if (ed) { document.getElementById('qe_end_date').value = ed;   filled.push('end'); }
+
+    // Advance paid
+    const paidM = text.match(/\b(?:paid|advance)\s*[:\s]\s*(\d+)/i);
+    if (paidM) { document.getElementById('qe_advance').value = paidM[1]; filled.push('paid'); }
+
+    // Own items
+    const itemsM = text.match(/\bitems?\s*[:\s]\s*([\d,\s]+)/i);
+    if (itemsM) {
+        itemsM[1].match(/\d+/g).forEach(function(id) {
+            const cb = document.querySelector('input[name="item_ids"][value="' + id + '"]');
+            if (cb) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event('change'));
+                syncOwnQty(cb);
+                filled.push('item ' + id);
+            }
+        });
+    }
+
+    // Vendor name
+    const vendorM = text.match(/\bvendor\s*[:\s]\s*(\S+)/i);
+    if (vendorM) { document.getElementById('qe_vendor_name').value = vendorM[1]; filled.push('vendor'); }
+
+    // Vendor items
+    const vitemsM = text.match(/\bvitems?\s*[:\s]\s*([\d,\s]+)/i);
+    if (vitemsM) {
+        vitemsM[1].match(/\d+/g).forEach(function(id) {
+            const card = document.getElementById('vendor-card-' + id);
+            if (card) {
+                card.style.display = '';
+                const vcb = card.querySelector('input[type="checkbox"]');
+                if (vcb) { vcb.checked = true; syncVendorQty(vcb); filled.push('vitem ' + id); }
+            }
+        });
+    }
+
+    if (filled.length) {
+        msg.textContent = '✓ ' + filled.join(', ');
+        msg.style.color = '#16a34a';
+        document.querySelector('.card:nth-child(2)').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        msg.textContent = 'Nothing recognised — check the format hint below.';
+        msg.style.color = '#dc2626';
+    }
+}
+// ── end Quick Entry ──────────────────────────────────────────────────
 
 // Show/hide outside equipment cards based on own equipment selection
 document.querySelectorAll('input[name="item_ids"]').forEach(function(checkbox) {
