@@ -562,7 +562,7 @@ border-radius:8px;
 cursor:pointer;
 }
 
-.price-qty-col{display:flex;flex-direction:column;align-items:stretch;gap:3px;flex-shrink:0;}
+.price-qty-col{display:flex;flex-direction:column;align-items:stretch;gap:3px;flex-shrink:0;width:90px;}
 .qty-stepper{display:flex;align-items:center;justify-content:center;gap:2px;height:32px;box-sizing:border-box;background:#f0f6ff;border:1px solid #93c5fd;border-radius:5px;padding:0 4px;}
 .qty-stepper button{width:20px;height:20px;padding:0;font-size:13px;line-height:1;border:none;border-radius:3px;background:#dbeafe;color:#1e40af;cursor:pointer;flex-shrink:0;}
 .qty-stepper button:hover{background:#bfdbfe;}
