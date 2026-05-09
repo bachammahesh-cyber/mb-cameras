@@ -41,9 +41,9 @@
     <span style="font-size:12px;color:#94a3b8;">No Quick IDs set yet — go to Inventory → Edit each item to assign one.</span>
     {% endif %}
   </div>
-  <div class="qe-example"><span class="qe-example-label">e.g.</span> Rahul 9876543210 10/5-15/5 items:s3,fx3(2),tripod,lens paid:2000 vendor:Raju vitems:tripod,lens(2)</div>
+  <div class="qe-example"><span class="qe-example-label">e.g.</span> Rahul 9876543210 10/5-15/5 items:s3,fx3(2),tripod,1635gm,50gm(2) paid:2000 vendor:Raju vitems:tripod,50gm(2)</div>
   <textarea id="qe-text" class="qe-textarea" rows="2" placeholder="Type your entry here…"></textarea>
-  <div class="qe-hint">No bracket = qty 1 &nbsp;·&nbsp; ID(qty) for more than one &nbsp;·&nbsp; vitems must be a subset of items</div>
+  <div class="qe-hint">Name &nbsp;·&nbsp; Phone &nbsp;·&nbsp; DD/MM-DD/MM &nbsp;·&nbsp; items:ID or ID(qty),... &nbsp;·&nbsp; paid:Amount &nbsp;·&nbsp; vendor:Name &nbsp;·&nbsp; vitems:ID or ID(qty),...</div>
   <div class="qe-actions">
     <button type="button" class="qe-fill-btn" onclick="fillFromQuick()">Fill Form ↓</button>
     <span id="qe-msg" class="qe-msg"></span>
