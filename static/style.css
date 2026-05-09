@@ -634,7 +634,7 @@ padding:16px;
 .card,
 .box{
 padding:16px;
-margin-bottom:16px;
+margin-bottom:12px;
 }
 
 .header{
@@ -675,17 +675,123 @@ font-size:26px;
 margin:2px 0 14px;
 }
 
+/* ── Form inputs: prevent iOS zoom, comfortable tap targets ── */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+textarea,
+select{
+font-size:16px;
+min-height:44px;
+padding:10px 12px;
+box-sizing:border-box;
+}
+.qty-input,
+.price-qty-col .vendor-price{
+font-size:15px;
+min-height:unset;
+padding:6px;
+}
+.qe-textarea{
+min-height:unset;
+padding:10px 12px;
+font-size:16px;
+}
+
+/* ── Quick Entry card ── */
+.eq-chip{
+font-size:13px;
+padding:5px 10px;
+}
+.qe-example{
+font-size:11px;
+overflow-x:auto;
+white-space:nowrap;
+-webkit-overflow-scrolling:touch;
+}
+.qe-actions{
+flex-direction:column;
+align-items:stretch;
+gap:8px;
+}
+.qe-fill-btn{
+width:100%;
+padding:12px;
+font-size:15px;
+text-align:center;
+}
+.qe-hint{
+font-size:12px;
+}
+
+/* ── Equipment grid & cards ── */
 .equipment-grid{
 grid-template-columns:1fr;
+gap:10px;
 }
 
 .equipment-card{
-flex-direction:column;
+flex-wrap:wrap;
 align-items:flex-start;
+gap:10px;
+padding:12px;
 }
 
-.vendor-price{
+.equipment-card input[type="checkbox"]{
+width:22px;
+height:22px;
+min-height:unset;
+margin-top:2px;
+flex-shrink:0;
+}
+
+.equipment-title{
+font-size:15px;
+}
+
+.equipment-price{
+font-size:13px;
+}
+
+.price-qty-col{
+flex-direction:row;
 width:100%;
+flex-shrink:1;
+min-width:0;
+gap:8px;
+margin-top:0;
+}
+
+.price-qty-col .vendor-price{
+flex:1;
+width:auto;
+min-width:0;
+height:40px;
+font-size:15px;
+}
+
+.price-qty-col .qty-stepper{
+flex:1;
+width:auto;
+height:40px;
+}
+
+.qty-stepper button{
+width:28px;
+height:28px;
+font-size:16px;
+}
+
+/* ── Vendor name & save button ── */
+input[name="vendor_name"]{
+width:100%;
+box-sizing:border-box;
+}
+
+.center button[type="submit"]{
+width:100%;
+padding:14px;
+font-size:16px;
 }
 
 .records-table{
