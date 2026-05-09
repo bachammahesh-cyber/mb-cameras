@@ -143,6 +143,10 @@ value="{{item['rent_per_day']}}"
 
 </div>
 
+<div id="show-all-wrap" style="display:none;margin-top:8px;">
+  <a href="#" id="show-all-link" onclick="showAllEquipment(event)" style="font-size:13px;color:#1e40af;">+ Show all equipment</a>
+</div>
+
 </div>
 
 
@@ -373,6 +377,15 @@ function fillFromQuick() {
         });
     }
 
+    // Hide unchecked own equipment cards
+    let anyHidden = false;
+    document.querySelectorAll('input[name="item_ids"]').forEach(function(cb) {
+        const card = cb.closest('.equipment-card');
+        if (!cb.checked) { card.style.display = 'none'; anyHidden = true; }
+        else { card.style.display = ''; }
+    });
+    document.getElementById('show-all-wrap').style.display = anyHidden ? '' : 'none';
+
     if (filled.length) {
         msg.textContent = '✓ ' + filled.join(', ');
         msg.style.color = '#16a34a';
@@ -381,6 +394,14 @@ function fillFromQuick() {
         msg.textContent = 'Nothing recognised — check the format hint below.';
         msg.style.color = '#dc2626';
     }
+}
+
+function showAllEquipment(e) {
+    e.preventDefault();
+    document.querySelectorAll('input[name="item_ids"]').forEach(function(cb) {
+        cb.closest('.equipment-card').style.display = '';
+    });
+    document.getElementById('show-all-wrap').style.display = 'none';
 }
 // ── end Quick Entry ──────────────────────────────────────────────────
 
