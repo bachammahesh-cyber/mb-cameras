@@ -398,6 +398,8 @@ TABLES
 .status-filters{display:flex;gap:6px;align-items:center;}
 .date-filters{display:flex;align-items:center;gap:6px;font-size:13px;color:#888;}
 .filter-divider{width:1px;height:24px;background:#b0b8c4;margin:0 4px;flex-shrink:0;}
+.mob-drop{display:none;}
+.mob-date-row{display:none;}
 
 /* Period label (Revenue section) */
 .period-label{font-size:14px;color:#64748b;font-weight:400;}
@@ -846,11 +848,27 @@ padding:14px;
 font-size:16px;
 }
 
-/* ── Filter bar: stack on mobile ── */
+/* ── Filter bar: dropdowns on mobile ── */
 .filter-bar input[type="text"]{flex-basis:100%;min-width:unset;width:100%;}
-.filter-bar .date-filters{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;}
-.filter-bar .date-filters input[type="date"]{flex:1;min-width:0;}
-.filter-btn{height:40px;font-size:14px;padding:0 14px;}
+.filter-bar .status-filters{display:none;}
+.filter-bar .date-filters{display:none;}
+.filter-divider{display:none;}
+.mob-drop{
+  display:block;flex:1;min-width:0;
+  height:40px;box-sizing:border-box;
+  border:1px solid #dde3ea;border-radius:8px;
+  padding:0 10px;font-size:15px;font-family:inherit;
+  background:#fff;color:#1e293b;
+  -webkit-appearance:auto;appearance:auto;
+}
+.mob-date-row{
+  align-items:center;gap:6px;flex-basis:100%;
+}
+.mob-date-row input[type="date"]{
+  flex:1;min-width:0;height:40px;font-size:15px;
+  border:1px solid #dde3ea;border-radius:8px;padding:0 8px;
+  background:#fff;box-sizing:border-box;font-family:inherit;
+}
 
 /* ── rental_records table → cards ── */
 .records-table{

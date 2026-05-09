@@ -39,6 +39,22 @@
     <span>–</span>
     <input type="date" id="filter-to" onchange="onDateChange()" title="To date">
   </div>
+  <!-- Mobile dropdowns (hidden on desktop) -->
+  <select class="mob-drop" id="mob-period" onchange="mobPeriod(this.value)">
+    <option value="month" id="mob-month-opt"></option>
+    <option value="all">All Time</option>
+    <option value="custom">Custom…</option>
+  </select>
+  <select class="mob-drop" id="mob-status" onchange="mobStatus(this.value)">
+    <option value="all">All Status</option>
+    <option value="Active">Active</option>
+    <option value="Returned">Returned</option>
+  </select>
+  <div class="mob-date-row" id="mob-dates" style="display:none;">
+    <input type="date" id="mob-from" onchange="mobDateChange()">
+    <span>–</span>
+    <input type="date" id="mob-to" onchange="mobDateChange()">
+  </div>
 </div>
 
 <div class="card">
@@ -201,6 +217,21 @@ function applyFilters() {
 
 // Default to current month on load
 setThisMonth();
+
+// Mobile dropdown handlers
+document.getElementById('mob-month-opt').textContent = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+function mobPeriod(val) {
+    const dr = document.getElementById('mob-dates');
+    if (val === 'month') { setThisMonth(); dr.style.display = 'none'; }
+    else if (val === 'all') { setAllTime(); dr.style.display = 'none'; }
+    else { dr.style.display = 'flex'; }
+}
+function mobStatus(val) { activeStatus = val; applyFilters(); }
+function mobDateChange() {
+    document.getElementById('filter-from').value = document.getElementById('mob-from').value;
+    document.getElementById('filter-to').value = document.getElementById('mob-to').value;
+    applyFilters();
+}
 </script>
 
 </body>

@@ -36,6 +36,16 @@
     <span>–</span>
     <input type="date" id="r-to" onchange="onRevDateChange()" title="To">
   </div>
+  <select class="mob-drop" id="r-mob-period" onchange="mobRevPeriod(this.value)">
+    <option value="month" id="r-mob-opt"></option>
+    <option value="all">All Time</option>
+    <option value="custom">Custom…</option>
+  </select>
+  <div class="mob-date-row" id="r-mob-dates" style="display:none;">
+    <input type="date" id="r-mob-from" onchange="mobRevDate()">
+    <span>–</span>
+    <input type="date" id="r-mob-to" onchange="mobRevDate()">
+  </div>
 </div>
 <div class="revenue-grid">
 <div class="revenue-card"><h3>Customer Total</h3><p id="rev-customer-total">₹0</p></div>
@@ -65,6 +75,21 @@
     <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this,'customer-tbody')">All</button>
     <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this,'customer-tbody')">Due</button>
     <button class="filter-btn is-bal" data-bal="clear" onclick="setBalFilter(this,'customer-tbody')">Cleared</button>
+  </div>
+  <select class="mob-drop" id="c-mob-period" onchange="mobCustPeriod(this.value)">
+    <option value="month" id="c-mob-opt"></option>
+    <option value="all">All Time</option>
+    <option value="custom">Custom…</option>
+  </select>
+  <select class="mob-drop" id="c-mob-bal" onchange="mobCustBal(this.value)">
+    <option value="all">All</option>
+    <option value="due">Due</option>
+    <option value="clear">Cleared</option>
+  </select>
+  <div class="mob-date-row" id="c-mob-dates" style="display:none;">
+    <input type="date" id="c-mob-from" onchange="mobCustDate()">
+    <span>–</span>
+    <input type="date" id="c-mob-to" onchange="mobCustDate()">
   </div>
 </div>
 <table class="records-table" id="cust-dues-table">
@@ -119,6 +144,21 @@
     <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this,'vendor-tbody')">All</button>
     <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this,'vendor-tbody')">Due</button>
     <button class="filter-btn is-bal" data-bal="clear" onclick="setBalFilter(this,'vendor-tbody')">Cleared</button>
+  </div>
+  <select class="mob-drop" id="v-mob-period" onchange="mobVendPeriod(this.value)">
+    <option value="month" id="v-mob-opt"></option>
+    <option value="all">All Time</option>
+    <option value="custom">Custom…</option>
+  </select>
+  <select class="mob-drop" id="v-mob-bal" onchange="mobVendBal(this.value)">
+    <option value="all">All</option>
+    <option value="due">Due</option>
+    <option value="clear">Cleared</option>
+  </select>
+  <div class="mob-date-row" id="v-mob-dates" style="display:none;">
+    <input type="date" id="v-mob-from" onchange="mobVendDate()">
+    <span>–</span>
+    <input type="date" id="v-mob-to" onchange="mobVendDate()">
   </div>
 </div>
 <table class="records-table" id="vendor-table">
@@ -326,6 +366,47 @@ function confirmAmount(form, label) {
 setRevPeriod('month');
 setCustPeriod('month');
 setVendPeriod('month');
+
+// Mobile dropdown month labels
+['r-mob-opt','c-mob-opt','v-mob-opt'].forEach(id => {
+    document.getElementById(id).textContent = MONTH_LABEL;
+});
+
+function mobRevPeriod(val) {
+    const dr = document.getElementById('r-mob-dates');
+    if (val === 'month') { setRevPeriod('month'); dr.style.display = 'none'; }
+    else if (val === 'all') { setRevPeriod('all'); dr.style.display = 'none'; }
+    else { dr.style.display = 'flex'; }
+}
+function mobRevDate() {
+    document.getElementById('r-from').value = document.getElementById('r-mob-from').value;
+    document.getElementById('r-to').value = document.getElementById('r-mob-to').value;
+    onRevDateChange();
+}
+function mobCustPeriod(val) {
+    const dr = document.getElementById('c-mob-dates');
+    if (val === 'month') { setCustPeriod('month'); dr.style.display = 'none'; }
+    else if (val === 'all') { setCustPeriod('all'); dr.style.display = 'none'; }
+    else { dr.style.display = 'flex'; }
+}
+function mobCustDate() {
+    document.getElementById('c-from').value = document.getElementById('c-mob-from').value;
+    document.getElementById('c-to').value = document.getElementById('c-mob-to').value;
+    onCustDateChange();
+}
+function mobCustBal(val) { balStates['customer-tbody'] = val; applyCustFilter(); }
+function mobVendPeriod(val) {
+    const dr = document.getElementById('v-mob-dates');
+    if (val === 'month') { setVendPeriod('month'); dr.style.display = 'none'; }
+    else if (val === 'all') { setVendPeriod('all'); dr.style.display = 'none'; }
+    else { dr.style.display = 'flex'; }
+}
+function mobVendDate() {
+    document.getElementById('v-from').value = document.getElementById('v-mob-from').value;
+    document.getElementById('v-to').value = document.getElementById('v-mob-to').value;
+    onVendDateChange();
+}
+function mobVendBal(val) { balStates['vendor-tbody'] = val; applyVendFilter(); }
 </script>
 
 </body>
