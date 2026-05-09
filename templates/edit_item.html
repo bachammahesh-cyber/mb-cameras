@@ -28,6 +28,9 @@
 
 <form method="POST">
 
+<label>Quick ID <span style="font-weight:400;color:#888;font-size:12px;">— short code for Quick Entry (e.g. s3, tripod1)</span></label>
+<input type="text" name="custom_id" value="{{ item.custom_id or '' }}" placeholder="e.g. s3" maxlength="20" style="text-transform:lowercase;">
+
 <label>Equipment Name</label>
 <input type="text" name="name" value="{{ item.name }}" required>
 

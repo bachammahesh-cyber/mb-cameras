@@ -33,12 +33,17 @@
 <div id="qe-body">
   <div class="qe-chips">
     {% for item in items %}
-    <span class="eq-chip"><strong>{{ item['id'] }}</strong> {{ item['name'] }}</span>
+    {% if item['custom_id'] %}
+    <span class="eq-chip"><strong>{{ item['custom_id'] }}</strong> {{ item['name'] }}</span>
+    {% endif %}
     {% endfor %}
+    {% if not items|selectattr('custom_id')|list %}
+    <span style="font-size:12px;color:#94a3b8;">No Quick IDs set yet — go to Inventory → Edit each item to assign one.</span>
+    {% endif %}
   </div>
   <textarea id="qe-text" class="qe-textarea" rows="2"
-    placeholder="Rahul 9876543210 10/5-15/5 items:2,5 paid:2000 vendor:Raju vitems:8"></textarea>
-  <div class="qe-hint">Name  ·  10-digit phone  ·  DD/MM-DD/MM  ·  items:IDs  ·  paid:Amount  ·  vendor:Name  vitems:IDs</div>
+    placeholder="Rahul 9876543210 10/5-15/5 items:s3,tripod1 paid:2000 vendor:Raju vitems:gimbal"></textarea>
+  <div class="qe-hint">Name  ·  10-digit phone  ·  DD/MM-DD/MM  ·  items:QuickIDs  ·  paid:Amount  ·  vendor:Name  vitems:QuickIDs</div>
   <div class="qe-actions">
     <button type="button" class="qe-fill-btn" onclick="fillFromQuick()">Fill Form ↓</button>
     <span id="qe-msg" class="qe-msg"></span>
@@ -258,6 +263,12 @@ function syncVendorQty(checkbox) {
     }
 }
 
+// Quick ID → numeric item id map (built from server-rendered data)
+const qeIdMap = {};
+{% for item in items %}{% if item['custom_id'] %}
+qeIdMap[{{ item['custom_id']|lower|tojson }}] = {{ item['id'] }};
+{% endif %}{% endfor %}
+
 // ── Quick Entry (beta) ──────────────────────────────────────────────
 function toggleQE(btn) {
     const body = document.getElementById('qe-body');
@@ -309,16 +320,18 @@ function fillFromQuick() {
     const paidM = text.match(/\b(?:paid|advance)\s*[:\s]\s*(\d+)/i);
     if (paidM) { document.getElementById('qe_advance').value = paidM[1]; filled.push('paid'); }
 
-    // Own items
-    const itemsM = text.match(/\bitems?\s*[:\s]\s*([\d,\s]+)/i);
+    // Own items — resolve custom_id tokens to numeric ids
+    const itemsM = text.match(/\bitems?\s*[:\s]\s*([A-Za-z0-9,_\s]+?)(?=\s+(?:paid|advance|vendor|vitems?|$)|\s*$)/i);
     if (itemsM) {
-        itemsM[1].match(/\d+/g).forEach(function(id) {
-            const cb = document.querySelector('input[name="item_ids"][value="' + id + '"]');
+        itemsM[1].split(/[\s,]+/).filter(Boolean).forEach(function(token) {
+            const numId = qeIdMap[token.toLowerCase()];
+            if (numId === undefined) return;
+            const cb = document.querySelector('input[name="item_ids"][value="' + numId + '"]');
             if (cb) {
                 cb.checked = true;
                 cb.dispatchEvent(new Event('change'));
                 syncOwnQty(cb);
-                filled.push('item ' + id);
+                filled.push(token);
             }
         });
     }
@@ -327,15 +340,17 @@ function fillFromQuick() {
     const vendorM = text.match(/\bvendor\s*[:\s]\s*(\S+)/i);
     if (vendorM) { document.getElementById('qe_vendor_name').value = vendorM[1]; filled.push('vendor'); }
 
-    // Vendor items
-    const vitemsM = text.match(/\bvitems?\s*[:\s]\s*([\d,\s]+)/i);
+    // Vendor items — resolve custom_id tokens
+    const vitemsM = text.match(/\bvitems?\s*[:\s]\s*([A-Za-z0-9,_\s]+?)(?=\s*$)/i);
     if (vitemsM) {
-        vitemsM[1].match(/\d+/g).forEach(function(id) {
-            const card = document.getElementById('vendor-card-' + id);
+        vitemsM[1].split(/[\s,]+/).filter(Boolean).forEach(function(token) {
+            const numId = qeIdMap[token.toLowerCase()];
+            if (numId === undefined) return;
+            const card = document.getElementById('vendor-card-' + numId);
             if (card) {
                 card.style.display = '';
                 const vcb = card.querySelector('input[type="checkbox"]');
-                if (vcb) { vcb.checked = true; syncVendorQty(vcb); filled.push('vitem ' + id); }
+                if (vcb) { vcb.checked = true; syncVendorQty(vcb); filled.push('v:' + token); }
             }
         });
     }

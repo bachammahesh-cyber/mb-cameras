@@ -164,7 +164,8 @@ def init_db():
             name TEXT,
             category TEXT,
             rent_per_day DOUBLE PRECISION,
-            status TEXT
+            status TEXT,
+            custom_id TEXT
         )
         """)
 
@@ -287,6 +288,14 @@ def init_db():
             conn.execute(
                 "ALTER TABLE outside_items ADD COLUMN quantity INTEGER DEFAULT 1"
             )
+
+        items_cid_exists = conn.execute("""
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='items' AND column_name='custom_id'
+        """).fetchone()
+        if not items_cid_exists:
+            conn.execute("ALTER TABLE items ADD COLUMN custom_id TEXT")
     else:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS users(
@@ -305,7 +314,8 @@ def init_db():
             name TEXT,
             category TEXT,
             rent_per_day REAL,
-            status TEXT
+            status TEXT,
+            custom_id TEXT
         )
         """)
 
@@ -423,6 +433,14 @@ def init_db():
             conn.execute(
                 "ALTER TABLE outside_items ADD COLUMN quantity INTEGER DEFAULT 1"
             )
+
+        items_cols = [
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(items)"
+            ).fetchall()
+        ]
+        if "custom_id" not in items_cols:
+            conn.execute("ALTER TABLE items ADD COLUMN custom_id TEXT")
 
     conn.execute("""
     UPDATE outside_items
@@ -795,14 +813,15 @@ def add_item():
     name = request.form["name"]
     category = request.form["category"]
     rent = request.form["rent"]
+    custom_id = request.form.get("custom_id", "").strip() or None
     tenant_id = current_tenant_id()
 
     conn = get_db()
 
     conn.execute("""
-    INSERT INTO items(tenant_id,name,category,rent_per_day,status)
-    VALUES(?,?,?,?,?)
-    """, (tenant_id, name, category, rent, "Available"))
+    INSERT INTO items(tenant_id,name,category,rent_per_day,status,custom_id)
+    VALUES(?,?,?,?,?,?)
+    """, (tenant_id, name, category, rent, "Available", custom_id))
 
     conn.commit()
     conn.close()
@@ -832,12 +851,13 @@ def edit_item(item_id):
         name = request.form["name"]
         category = request.form["category"]
         rent = request.form["rent"]
+        custom_id = request.form.get("custom_id", "").strip() or None
 
         conn.execute("""
         UPDATE items
-        SET name=?, category=?, rent_per_day=?
+        SET name=?, category=?, rent_per_day=?, custom_id=?
         WHERE id=? AND tenant_id=?
-        """, (name, category, rent, item_id, tenant_id))
+        """, (name, category, rent, custom_id, item_id, tenant_id))
 
         conn.commit()
         conn.close()

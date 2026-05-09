@@ -26,6 +26,9 @@
 
 <form method="POST" action="/add_item">
 
+<label>Quick ID <span style="font-weight:400;color:#888;font-size:12px;">— short code for Quick Entry (e.g. s3, tripod1)</span></label>
+<input name="custom_id" placeholder="e.g. s3" maxlength="20" style="text-transform:lowercase;">
+
 <label>Equipment Name</label>
 <input name="name" required>
 
@@ -72,7 +75,7 @@
 
 <thead>
 <tr>
-<th>ID</th>
+<th>Quick ID</th>
 <th>Name</th>
 <th>Category</th>
 <th>Rent / Day</th>
@@ -86,7 +89,7 @@
 {% for item in items %}
 
 <tr>
-<td>{{ item.id }}</td>
+<td>{% if item.custom_id %}<strong>{{ item.custom_id }}</strong>{% else %}<span style="color:#bbb;font-size:12px;">—</span>{% endif %}</td>
 <td>{{ item.name }}</td>
 <td>{{ item.category }}</td>
 <td>₹{{ item.rent_per_day }}</td>
