@@ -596,6 +596,8 @@ QUICK ENTRY (beta)
 .qe-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
 .eq-chip{background:#fff;border:1px solid #bfdbfe;border-radius:5px;padding:3px 8px;font-size:12px;color:#1e3a5f;}
 .eq-chip strong{color:#1e40af;margin-right:3px;}
+.qe-example{font-size:12px;color:#475569;background:#e8f0fe;border:1px dashed #93c5fd;border-radius:6px;padding:7px 12px;margin-bottom:8px;font-family:monospace;letter-spacing:0.01em;}
+.qe-example-label{font-family:sans-serif;font-weight:700;color:#1e40af;margin-right:6px;}
 .qe-textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #93c5fd;border-radius:6px;font-size:14px;font-family:inherit;resize:none;background:#fff;}
 .qe-textarea:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.15);}
 .qe-hint{font-size:11px;color:#94a3b8;margin:6px 0 10px;letter-spacing:0.01em;}
