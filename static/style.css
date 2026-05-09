@@ -621,6 +621,18 @@ padding:6px;
 font-size:13px;
 }
 
+.equipment-search-input{
+width:100%;box-sizing:border-box;
+padding:8px 12px;margin-bottom:12px;
+border:1px solid #dde3ea;border-radius:7px;
+font-size:14px;font-family:inherit;
+background:#fafbfc;
+}
+.equipment-search-input:focus{
+outline:none;border-color:#3b82f6;
+box-shadow:0 0 0 2px rgba(59,130,246,0.12);
+}
+
 /* ------------------------
 MOBILE RESPONSIVE
 ------------------------ */
