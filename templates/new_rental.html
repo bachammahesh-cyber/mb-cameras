@@ -306,7 +306,7 @@ function fillFromQuick() {
     }
 
     // Dates — Nday format (e.g. "2day" = 2-day rental starting today)
-    const dayM = text.match(/\b(\d+)\s*days?\b/i);
+    const dayM = text.match(/\b(\d{1,3})days?\b/i);
     if (dayM) {
         const days = Math.max(1, parseInt(dayM[1]));
         const today = new Date();
