@@ -560,11 +560,13 @@ background:#f9f9f9;
 border:1px solid #eee;
 border-radius:8px;
 cursor:pointer;
+position:relative;
 }
 
-.qty-stepper{display:flex;align-items:center;gap:4px;margin-left:auto;}
-.qty-stepper button{width:24px;height:24px;padding:0;font-size:14px;line-height:1;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;}
-.qty-input{width:36px;height:24px;text-align:center;border:1px solid #ccc;border-radius:4px;font-size:13px;padding:0;}
+.qty-stepper{position:absolute;bottom:5px;right:6px;display:flex;align-items:center;gap:2px;background:rgba(255,255,255,0.96);border:1px solid #d1d5db;border-radius:5px;padding:1px 4px;box-shadow:0 1px 3px rgba(0,0,0,0.07);}
+.qty-stepper button{width:18px;height:18px;padding:0;font-size:13px;line-height:1;border:none;border-radius:3px;background:#f3f4f6;color:#374151;cursor:pointer;}
+.qty-stepper button:hover{background:#e5e7eb;}
+.qty-input{width:26px;height:18px;text-align:center;border:none;background:transparent;font-size:12px;padding:0;color:#111;}
 
 .equipment-card input[type="checkbox"]{
 width:18px;
