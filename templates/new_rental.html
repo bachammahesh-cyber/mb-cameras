@@ -269,6 +269,16 @@ const qeIdMap = {};
 qeIdMap[{{ item['custom_id']|lower|tojson }}] = {{ item['id'] }};
 {% endif %}{% endfor %}
 
+// Highlight chips as user types — prefix-match any token in the textarea
+document.getElementById('qe-text').addEventListener('input', function() {
+    const tokens = this.value.toLowerCase().split(/[\s,:()\[\]]+/).filter(Boolean);
+    document.querySelectorAll('.eq-chip').forEach(function(chip) {
+        const cid = chip.querySelector('strong').textContent.toLowerCase();
+        const match = tokens.some(function(t) { return cid.startsWith(t) && t.length > 0; });
+        chip.classList.toggle('qe-chip-match', match);
+    });
+});
+
 // ── Quick Entry (beta) ──────────────────────────────────────────────
 function toggleQE(btn) {
     const body = document.getElementById('qe-body');
