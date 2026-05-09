@@ -197,6 +197,10 @@ placeholder="Price"
 
 </div>
 
+<div id="show-all-vendor-wrap" style="display:none;margin-top:8px;">
+  <a href="#" onclick="showAllVendorEquipment(event)" style="font-size:13px;color:#1e40af;">+ Show all outside equipment</a>
+</div>
+
 </div>
 
 
@@ -386,6 +390,14 @@ function fillFromQuick() {
     });
     document.getElementById('show-all-wrap').style.display = anyHidden ? '' : 'none';
 
+    // Hide unchecked vendor equipment cards
+    let anyVendorHidden = false;
+    document.querySelectorAll('[id^="vendor-card-"]').forEach(function(card) {
+        const vcb = card.querySelector('input[type="checkbox"]');
+        if (vcb && !vcb.checked) { card.style.display = 'none'; anyVendorHidden = true; }
+    });
+    document.getElementById('show-all-vendor-wrap').style.display = anyVendorHidden ? '' : 'none';
+
     if (filled.length) {
         msg.textContent = '✓ ' + filled.join(', ');
         msg.style.color = '#16a34a';
@@ -402,6 +414,15 @@ function showAllEquipment(e) {
         cb.closest('.equipment-card').style.display = '';
     });
     document.getElementById('show-all-wrap').style.display = 'none';
+}
+
+function showAllVendorEquipment(e) {
+    e.preventDefault();
+    document.querySelectorAll('[id^="vendor-card-"]').forEach(function(card) {
+        const ownCb = document.querySelector('input[name="item_ids"][value="' + card.id.replace('vendor-card-', '') + '"]');
+        if (ownCb && ownCb.checked) card.style.display = '';
+    });
+    document.getElementById('show-all-vendor-wrap').style.display = 'none';
 }
 // ── end Quick Entry ──────────────────────────────────────────────────
 
