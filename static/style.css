@@ -870,90 +870,36 @@ font-size:16px;
   background:#fff;box-sizing:border-box;font-family:inherit;
 }
 
-/* ── rental_records table → cards ── */
-.records-table{
-display:block;overflow-x:unset;white-space:normal;
-border:none;background:transparent;box-shadow:none;border-radius:0;
-}
-.records-table thead{display:none;}
-.records-table tbody{display:flex;flex-direction:column;gap:10px;}
-.records-table tr{
-display:grid;
-grid-template-columns:1fr 1fr 1fr;
-grid-template-areas:
-  "customer customer rdate"
-  "phone    phone    phone"
-  "equip    equip    equip"
-  "total    paid     balance"
-  "status   status   actions";
-background:#fff;border:1px solid #e2e8f0;border-radius:10px;
-padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);gap:4px 8px;align-items:start;
-}
-.records-table td{display:block;border:none;padding:0;font-size:13px;}
-.records-table td:nth-child(1){grid-area:rdate;font-size:11px;color:#64748b;text-align:right;}
-.records-table td:nth-child(2){display:none;}
-.records-table td:nth-child(3){grid-area:customer;font-size:15px;font-weight:700;color:#0f172a;}
-.records-table td:nth-child(4){grid-area:phone;font-size:12px;color:#64748b;}
-.records-table td:nth-child(5){grid-area:equip;}
-.records-table td:nth-child(5) select{width:100%;max-width:100%;font-size:13px;}
-.records-table td:nth-child(6){display:none;}
-.records-table td:nth-child(7){grid-area:total;}
-.records-table td:nth-child(7)::before{content:"Total ";font-size:10px;color:#94a3b8;display:block;}
-.records-table td:nth-child(8){grid-area:paid;}
-.records-table td:nth-child(8)::before{content:"Paid ";font-size:10px;color:#94a3b8;display:block;}
-.records-table td:nth-child(9){grid-area:balance;}
-.records-table td:nth-child(9)::before{content:"Balance ";font-size:10px;color:#94a3b8;display:block;}
-.records-table td:nth-child(10){grid-area:status;align-self:center;}
-.records-table td:nth-child(11){grid-area:actions;justify-self:end;}
-.table-actions{flex-direction:row;align-items:center;gap:6px;}
+/* ── rental_records: hide non-essential columns on mobile ── */
+/* Show: Date(1) Customer(3) Balance(9) Status(10) — hide rest */
+.records-table th:nth-child(2),.records-table td:nth-child(2){display:none;}
+.records-table th:nth-child(4),.records-table td:nth-child(4){display:none;}
+.records-table th:nth-child(5),.records-table td:nth-child(5){display:none;}
+.records-table th:nth-child(6),.records-table td:nth-child(6){display:none;}
+.records-table th:nth-child(7),.records-table td:nth-child(7){display:none;}
+.records-table th:nth-child(8),.records-table td:nth-child(8){display:none;}
+.records-table th:nth-child(11),.records-table td:nth-child(11){display:none;}
+.records-table th,.records-table td{padding:10px 8px;font-size:13px;}
+.records-table{overflow-x:auto;}
 
-/* ── credit_report tables → cards ── */
-#cust-dues-table,#vendor-table{
-display:block;overflow-x:unset;white-space:normal;
-border:none;background:transparent;box-shadow:none;
-}
-#cust-dues-table thead,#vendor-table thead{display:none;}
-#cust-dues-table tbody,#vendor-table tbody{display:flex;flex-direction:column;gap:10px;}
-#cust-dues-table tr,#vendor-table tr{
-background:#fff;border:1px solid #e2e8f0;border-radius:10px;
-padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);gap:4px 8px;
-}
-#cust-dues-table td,#vendor-table td{display:block;border:none;padding:2px 0;font-size:13px;}
+/* ── cust-dues-table: show Date(2) Customer(3) Balance(6) Receive(7) ── */
+#cust-dues-table th:nth-child(1),#cust-dues-table td:nth-child(1){display:none;}
+#cust-dues-table th:nth-child(4),#cust-dues-table td:nth-child(4){display:none;}
+#cust-dues-table th:nth-child(5),#cust-dues-table td:nth-child(5){display:none;}
+#cust-dues-table th,.cust-dues-table td{padding:10px 8px;font-size:13px;}
+#cust-dues-table td:nth-child(7) form{display:flex;gap:4px;}
+#cust-dues-table td:nth-child(7) form input{width:70px;min-width:0;}
+#cust-dues-table td:nth-child(7) form button{white-space:nowrap;padding:0 8px;}
 
-#cust-dues-table tr{
-display:grid;grid-template-columns:1fr 1fr 1fr;
-grid-template-areas:"cname cname cdate" "ctotal cpaid cbal" "cact cact cact";
-}
-#cust-dues-table td:nth-child(1){display:none;}
-#cust-dues-table td:nth-child(2){grid-area:cdate;font-size:11px;color:#64748b;text-align:right;}
-#cust-dues-table td:nth-child(3){grid-area:cname;font-size:15px;font-weight:700;}
-#cust-dues-table td:nth-child(4){grid-area:ctotal;}
-#cust-dues-table td:nth-child(4)::before{content:"Total ";font-size:10px;color:#94a3b8;display:block;}
-#cust-dues-table td:nth-child(5){grid-area:cpaid;}
-#cust-dues-table td:nth-child(5)::before{content:"Paid ";font-size:10px;color:#94a3b8;display:block;}
-#cust-dues-table td:nth-child(6){grid-area:cbal;}
-#cust-dues-table td:nth-child(6)::before{content:"Balance ";font-size:10px;color:#94a3b8;display:block;}
-#cust-dues-table td:nth-child(7){grid-area:cact;}
-#cust-dues-table td:nth-child(7) form{display:flex;gap:6px;width:100%;}
-#cust-dues-table td:nth-child(7) form input{flex:1;min-width:0;}
-
-#vendor-table tr{
-display:grid;grid-template-columns:1fr 1fr 1fr;
-grid-template-areas:"vname vname vdate" "vequip vequip vequip" "vtotal vpaid vbal" "vact vact vact";
-}
-#vendor-table td:nth-child(1){display:none;}
-#vendor-table td:nth-child(2){grid-area:vdate;font-size:11px;color:#64748b;text-align:right;}
-#vendor-table td:nth-child(3){grid-area:vname;font-size:15px;font-weight:700;}
-#vendor-table td:nth-child(4){grid-area:vequip;font-size:12px;color:#475569;}
-#vendor-table td:nth-child(5){grid-area:vtotal;}
-#vendor-table td:nth-child(5)::before{content:"Total ";font-size:10px;color:#94a3b8;display:block;}
-#vendor-table td:nth-child(6){grid-area:vpaid;}
-#vendor-table td:nth-child(6)::before{content:"Paid ";font-size:10px;color:#94a3b8;display:block;}
-#vendor-table td:nth-child(7){grid-area:vbal;}
-#vendor-table td:nth-child(7)::before{content:"Balance ";font-size:10px;color:#94a3b8;display:block;}
-#vendor-table td:nth-child(8){grid-area:vact;}
-#vendor-table td:nth-child(8) form{display:flex;gap:6px;width:100%;}
-#vendor-table td:nth-child(8) form input{flex:1;min-width:0;}
+/* ── vendor-table: show Date(2) Vendor(3) Balance(7) Pay(8) ── */
+#vendor-table th:nth-child(1),#vendor-table td:nth-child(1){display:none;}
+#vendor-table th:nth-child(4),#vendor-table td:nth-child(4){display:none;}
+#vendor-table th:nth-child(5),#vendor-table td:nth-child(5){display:none;}
+#vendor-table th:nth-child(6),#vendor-table td:nth-child(6){display:none;}
+#vendor-table th,#vendor-table td{padding:10px 8px;font-size:13px;}
+#vendor-table td:nth-child(8) form{display:flex;gap:4px;}
+#vendor-table td:nth-child(8) form input{width:70px;min-width:0;}
+#vendor-table td:nth-child(8) form button{white-space:nowrap;padding:0 8px;}
 
 /* ── Revenue cards: 2-column grid on mobile ── */
 .revenue-grid{grid-template-columns:1fr 1fr;}
