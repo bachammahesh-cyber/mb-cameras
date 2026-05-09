@@ -338,14 +338,26 @@ TABLES
 
 /* Filter bar */
 .filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:16px;}
-.filter-bar input[type="text"]{flex:1;min-width:180px;padding:0 12px;border:1px solid #dde3ea;border-radius:6px;font-size:13px;height:32px;box-sizing:border-box;line-height:32px;}
-.filter-bar input[type="date"]{padding:0 6px;border:1px solid #dde3ea;border-radius:6px;font-size:13px;height:32px;box-sizing:border-box;line-height:32px;}
-.status-filters{display:flex;gap:6px;height:32px;align-items:stretch;}
-.date-filters{display:flex;align-items:center;gap:6px;color:#888;font-size:13px;height:32px;}
-.filter-btn{padding:0 12px;border:1px solid #dde3ea;border-radius:6px;background:#fff;font-size:13px;cursor:pointer;color:#555;height:32px;box-sizing:border-box;display:inline-flex;align-items:center;}
+.filter-bar input[type="text"],
+.filter-bar input[type="date"],
+.filter-btn{
+  -webkit-appearance:none;appearance:none;
+  display:inline-flex;align-items:center;
+  height:32px;min-height:32px;max-height:32px;
+  box-sizing:border-box;
+  border:1px solid #dde3ea;border-radius:6px;
+  font-family:inherit;font-size:13px;
+  padding:0 10px;margin:0;
+  background:#fff;color:#555;
+  vertical-align:middle;
+}
+.filter-bar input[type="text"]{flex:1;min-width:180px;padding:0 12px;}
+.filter-btn{cursor:pointer;justify-content:center;}
 .filter-btn.active{background:#1e40af;color:#fff;border-color:#1e40af;}
 .filter-btn.is-bal.active{background:#0d9488;border-color:#0d9488;color:#fff;}
-.filter-divider{width:1px;height:32px;background:#b0b8c4;margin:0 4px;flex-shrink:0;}
+.status-filters{display:flex;gap:6px;align-items:center;}
+.date-filters{display:flex;align-items:center;gap:6px;font-size:13px;color:#888;}
+.filter-divider{width:1px;height:24px;background:#b0b8c4;margin:0 4px;flex-shrink:0;}
 
 /* Period label (Revenue section) */
 .period-label{font-size:14px;color:#64748b;font-weight:400;}
