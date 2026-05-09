@@ -55,16 +55,16 @@
     <button class="filter-btn active" id="c-btn-month" onclick="setCustPeriod('month')"></button>
     <button class="filter-btn" id="c-btn-all" onclick="setCustPeriod('all')">All Time</button>
   </div>
+  <div class="date-filters">
+    <input type="date" id="c-from" onchange="onCustDateChange()" title="From">
+    <span>–</span>
+    <input type="date" id="c-to" onchange="onCustDateChange()" title="To">
+  </div>
   <span class="filter-divider"></span>
   <div class="status-filters">
     <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this,'customer-tbody')">All</button>
     <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this,'customer-tbody')">Due</button>
     <button class="filter-btn is-bal" data-bal="clear" onclick="setBalFilter(this,'customer-tbody')">Cleared</button>
-  </div>
-  <div class="date-filters">
-    <input type="date" id="c-from" onchange="onCustDateChange()" title="From">
-    <span>–</span>
-    <input type="date" id="c-to" onchange="onCustDateChange()" title="To">
   </div>
 </div>
 <table class="records-table">
@@ -109,16 +109,16 @@
     <button class="filter-btn active" id="v-btn-month" onclick="setVendPeriod('month')"></button>
     <button class="filter-btn" id="v-btn-all" onclick="setVendPeriod('all')">All Time</button>
   </div>
+  <div class="date-filters">
+    <input type="date" id="v-from" onchange="onVendDateChange()" title="From">
+    <span>–</span>
+    <input type="date" id="v-to" onchange="onVendDateChange()" title="To">
+  </div>
   <span class="filter-divider"></span>
   <div class="status-filters">
     <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this,'vendor-tbody')">All</button>
     <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this,'vendor-tbody')">Due</button>
     <button class="filter-btn is-bal" data-bal="clear" onclick="setBalFilter(this,'vendor-tbody')">Cleared</button>
-  </div>
-  <div class="date-filters">
-    <input type="date" id="v-from" onchange="onVendDateChange()" title="From">
-    <span>–</span>
-    <input type="date" id="v-to" onchange="onVendDateChange()" title="To">
   </div>
 </div>
 <table class="records-table">
