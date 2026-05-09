@@ -190,9 +190,7 @@ value="{{ selected_vendor_rates.get(item['name'], item['rent_per_day']) }}"
 
 </div>
 
-<div class="bottom-logout-band">
-<a href="/logout">Logout</a>
-</div>
+{% include "_nav.html" %}
 
 <script>
 const clientDetails = {
