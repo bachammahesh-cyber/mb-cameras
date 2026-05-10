@@ -775,12 +775,31 @@ def dashboard():
     if "user_id" not in session:
         return redirect("/")
 
+    tenant_id_val = current_tenant_id()
+    conn = get_db()
+    active_count = conn.execute(
+        "SELECT COUNT(*) AS cnt FROM rentals WHERE tenant_id=? AND status='Active'",
+        (tenant_id_val,)
+    ).fetchone()["cnt"]
+    active_items = conn.execute(
+        """SELECT i.name, ri.quantity
+           FROM rental_items ri
+           JOIN items i ON i.id = ri.item_id
+           JOIN rentals r ON r.id = ri.rental_id
+           WHERE r.tenant_id=? AND r.status='Active'
+           ORDER BY i.name""",
+        (tenant_id_val,)
+    ).fetchall()
+    conn.close()
+
     return render_template(
         "dashboard.html",
         username=session["username"],
         role=session["role"],
-        tenant_id=current_tenant_id(),
-        demo_tenant_id=DEMO_TENANT_ID
+        tenant_id=tenant_id_val,
+        demo_tenant_id=DEMO_TENANT_ID,
+        active_count=active_count,
+        active_items=active_items,
     )
 
 

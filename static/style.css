@@ -326,51 +326,36 @@ transition:0.2s;
 transform:translateY(-2px);
 }
 
-.dashboard-cards a{
-display:block;
-text-decoration:none;
-color:inherit;
-}
+/* Dashboard grid */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+.dash-tile-active{grid-column:1 / -1;}
 
-.dash-card{
-border:1px solid #0b3f6f;
-box-shadow:0 10px 22px rgba(15,23,42,0.14);
+.dash-tile{
+  display:block;background:#fff;border:1px solid #e2e8f0;
+  border-radius:14px;padding:18px;text-decoration:none;color:#0f172a;
+  box-shadow:0 1px 4px rgba(0,0,0,0.05);
 }
+.dash-tile:active{box-shadow:0 3px 12px rgba(0,0,0,0.12);}
 
-.dash-card-title{
-margin-top:0;
-margin-bottom:8px;
-font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",sans-serif;
-font-size:26px;
-font-weight:600;
-letter-spacing:0.02em;
-line-height:1.2;
-color:#0b2e4f;
-text-align:center;
-}
+/* Active rentals tile */
+.dash-tile-active .dash-tile-label{font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+.dash-tile-active .dash-tile-number{font-size:40px;font-weight:700;color:#0f172a;line-height:1;}
+.dash-tile-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.dash-item-chip{background:#f1f5f9;border-radius:20px;padding:3px 10px;font-size:12px;color:#475569;}
 
-.dash-card p{
-margin:0;
-font-weight:500;
-color:#16446d;
-text-align:center;
+/* Action tiles */
+.dash-tile-invoice,.dash-tile-receive,.dash-tile-vendor{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;min-height:90px;gap:8px;
 }
+.dash-tile-icon{font-size:28px;}
+.dash-tile-label{font-size:13px;font-weight:600;color:#1e293b;}
 
-.dashboard-cards .tone-rental{
-background:linear-gradient(140deg,#eaf6ff 0%,#cfe9ff 52%,#b9dcfb 100%);
-}
-
-.dashboard-cards .tone-records{
-background:linear-gradient(140deg,#e4f3ff 0%,#c8e5fa 50%,#add8f5 100%);
-}
-
-.dashboard-cards .tone-inventory{
-background:linear-gradient(140deg,#e9f7ff 0%,#cee9fb 55%,#b5daf0 100%);
-}
-
-.dashboard-cards .tone-financials{
-background:linear-gradient(140deg,#edf8ff 0%,#d2ebfb 55%,#bddff5 100%);
-}
+/* Accent colours */
+.dash-tile-active {border-left:4px solid #0b3f6f;}
+.dash-tile-invoice{border-left:4px solid #7c3aed;}
+.dash-tile-receive{border-left:4px solid #0f766e;}
+.dash-tile-vendor {border-left:4px solid #b45309;}
 
 /* ------------------------
 TABLES
@@ -831,10 +816,6 @@ font-size:12px;
 
 .cards{
 grid-template-columns:1fr;
-}
-
-.dash-card-title{
-font-size:20px;
 }
 
 .page-title{

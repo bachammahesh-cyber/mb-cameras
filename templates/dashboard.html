@@ -24,35 +24,38 @@
 <p>You are viewing the demo workspace with sample data only.</p>
 {% endif %}
 
-<div class="cards dashboard-cards">
+<div class="dash-grid">
 
-<a href="/new_rental">
-<div class="card dash-card tone-rental">
-<h3 class="dash-card-title">🎬 Make Rental Entry</h3>
-<p>Create a new camera rental job</p>
-</div>
-</a>
+  <!-- Tile 1: Active Rentals (live data, full width) -->
+  <a href="/rental_records" class="dash-tile dash-tile-active">
+    <div class="dash-tile-label">Active Rentals</div>
+    <div class="dash-tile-number">{{ active_count }}</div>
+    {% if active_items %}
+    <div class="dash-tile-items">
+      {% for item in active_items %}
+      <span class="dash-item-chip">{{ item.name }}{% if item.quantity > 1 %} ×{{ item.quantity }}{% endif %}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </a>
 
-<a href="/rental_records">
-<div class="card dash-card tone-records">
-<h3 class="dash-card-title">📋 Rental Records</h3>
-<p>View all rental entries</p>
-</div>
-</a>
+  <!-- Tile 2: Generate Invoice -->
+  <a href="/rental_records" class="dash-tile dash-tile-invoice">
+    <div class="dash-tile-icon">🧾</div>
+    <div class="dash-tile-label">Generate Invoice</div>
+  </a>
 
-<a href="/inventory">
-<div class="card dash-card tone-inventory">
-<h3 class="dash-card-title">📦 Inventory</h3>
-<p>Manage camera equipment</p>
-</div>
-</a>
+  <!-- Tile 3: Receive Payment -->
+  <a href="/credit_report#cust-dues-table" class="dash-tile dash-tile-receive">
+    <div class="dash-tile-icon">💵</div>
+    <div class="dash-tile-label">Receive Payment</div>
+  </a>
 
-<a href="/credit_report">
-<div class="card dash-card tone-financials">
-<h3 class="dash-card-title">💰 Financials</h3>
-<p>Customer payments & vendor dues</p>
-</div>
-</a>
+  <!-- Tile 4: Pay Vendors -->
+  <a href="/credit_report#vendor-table" class="dash-tile dash-tile-vendor">
+    <div class="dash-tile-icon">🏪</div>
+    <div class="dash-tile-label">Pay Vendors</div>
+  </a>
 
 </div>
 
