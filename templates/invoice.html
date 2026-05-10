@@ -53,20 +53,20 @@
     </div>
   </div>
 
-  <!-- Bill To / Ship To -->
+  <!-- Bill To -->
   <div class="inv-parties">
     <div class="inv-party">
       <div class="inv-party-label">Bill To</div>
+      {% if invoice.gst_type == 'gst' and invoice.customer_gst_name %}
+      <div class="inv-party-name">{{ invoice.customer_gst_name }}</div>
+      {% else %}
       <div class="inv-party-name">{{ rental.customer_name }}</div>
+      {% endif %}
       {% if rental.phone %}<div class="inv-party-sub">{{ rental.phone }}</div>{% endif %}
-    </div>
-    {% if invoice.gst_type == 'gst' and invoice.customer_gstin %}
-    <div class="inv-party">
-      <div class="inv-party-label">Ship To</div>
-      {% if invoice.customer_gst_name %}<div class="inv-party-name">{{ invoice.customer_gst_name }}</div>{% endif %}
+      {% if invoice.gst_type == 'gst' and invoice.customer_gstin %}
       <div class="inv-party-sub">GSTIN {{ invoice.customer_gstin }}</div>
+      {% endif %}
     </div>
-    {% endif %}
   </div>
 
   <!-- Items table -->
