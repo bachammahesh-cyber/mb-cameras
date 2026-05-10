@@ -2085,7 +2085,8 @@ def invoice_new(rental_id):
     conn.close()
     if not rental:
         return redirect("/credit_report")
-    return render_template("invoice_form.html", rental=rental)
+    back_url = request.args.get("from", f"/payment/{rental_id}")
+    return render_template("invoice_form.html", rental=rental, back_url=back_url)
 
 
 @app.route("/invoice/create/<int:rental_id>", methods=["POST"])

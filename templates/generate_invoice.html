@@ -30,7 +30,7 @@
   <td>{{ r.id }}</td>
   <td>{{ r.customer_name }}</td>
   <td>{{ r.total_amount }}</td>
-  <td><a href="/invoice/new/{{ r.id }}" class="btn-sm">Generate Invoice</a></td>
+  <td><a href="/invoice/new/{{ r.id }}?from=/generate_invoice" class="btn-sm">Generate Invoice</a></td>
 </tr>
 {% endfor %}
 </tbody>
