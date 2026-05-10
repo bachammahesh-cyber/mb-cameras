@@ -1001,6 +1001,12 @@ font-size:16px;
 #vendor-table th:nth-child(7),#vendor-table td:nth-child(7){display:table-cell;}
 #vendor-table th,#vendor-table td{padding:10px 8px;font-size:13px;}
 
+/* ── inv-pick-table: show Date(1) Customer(3) Action(5) — hide ID(2) Amount(4) ── */
+#inv-pick-table th:nth-child(2),#inv-pick-table td:nth-child(2){display:none;}
+#inv-pick-table th:nth-child(4),#inv-pick-table td:nth-child(4){display:none;}
+#inv-pick-table th:nth-child(5),#inv-pick-table td:nth-child(5){display:table-cell;}
+#inv-pick-table th,#inv-pick-table td{padding:10px 8px;font-size:13px;}
+
 /* ── Revenue cards: 2-column grid on mobile ── */
 .revenue-grid{grid-template-columns:1fr 1fr;}
 
