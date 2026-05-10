@@ -1989,10 +1989,11 @@ def invoice_create(rental_id):
     created_at = today.strftime("%Y-%m-%d %H:%M:%S")
     conn = get_db()
     try:
-        count = conn.execute(
-            "SELECT COUNT(*) FROM invoices WHERE tenant_id=? AND invoice_number LIKE ?",
+        row = conn.execute(
+            "SELECT COUNT(*) AS cnt FROM invoices WHERE tenant_id=? AND invoice_number LIKE ?",
             (tenant_id, f"INV-{today_str}%")
-        ).fetchone()[0]
+        ).fetchone()
+        count = row["cnt"]
         invoice_number = f"INV-{today_str}{count + 1:02d}"
         if USE_POSTGRES:
             invoice_id = conn.execute(
