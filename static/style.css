@@ -511,12 +511,13 @@ TABLES
 .inv-signature-line{border-top:1px solid #1e293b;padding-top:4px;margin-top:48px;}
 
 /* Print styles */
+@page{size:A4;margin:12mm;}
 @media print{
   .no-print,.bottom-nav,.invoice-actions{display:none!important;}
   body{background:white;margin:0;}
   .invoice-page{
     box-shadow:none;border:none;border-radius:0;
-    max-width:100%;margin:0;padding:24px;
+    max-width:100%;margin:0;padding:0;
   }
 }
 
