@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Generate Invoice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="with-logout-band">
+<div class="header brand-band">
+  <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+<div class="container">
+<h2 class="page-title">Generate Invoice</h2>
+<div class="filter-bar" style="margin-bottom:12px;">
+  <input type="text" id="search" placeholder="Search customer or ID…" oninput="applyFilter()">
+</div>
+<table class="records-table" id="inv-pick-table">
+<thead>
+<tr><th>Date</th><th>ID</th><th>Customer</th><th>Amount</th><th></th></tr>
+</thead>
+<tbody id="inv-tbody">
+{% for r in rentals %}
+<tr data-search="{{ r.customer_name | lower }} {{ r.id }}">
+  <td>{{ r.start_date | fmt_date }}</td>
+  <td>{{ r.id }}</td>
+  <td>{{ r.customer_name }}</td>
+  <td>{{ r.total_amount }}</td>
+  <td><a href="/invoice/new/{{ r.id }}" class="btn-sm">Generate Invoice</a></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<p id="no-results" style="display:none;padding:10px;color:#888;">No entries match.</p>
+</div>
+{% include "_nav.html" %}
+<script>
+function applyFilter() {
+    const q = document.getElementById('search').value.toLowerCase().trim();
+    let vis = 0;
+    document.querySelectorAll('#inv-tbody tr').forEach(row => {
+        const show = !q || (row.dataset.search || '').includes(q);
+        row.style.display = show ? '' : 'none';
+        if (show) vis++;
+    });
+    document.getElementById('no-results').style.display = vis === 0 ? '' : 'none';
+}
+</script>
+</body>
+</html>

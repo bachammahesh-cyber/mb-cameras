@@ -414,6 +414,12 @@ TABLES
 .payment-cleared{margin-top:20px;text-align:center;color:#16a34a;font-weight:600;font-size:16px;padding:14px;background:#f0fdf4;border-radius:8px;}
 
 /* Raise Invoice button (on payment page) */
+.btn-sm{
+  display:inline-block;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;
+  background:#eff6ff;border:1px solid #93c5fd;color:#1e40af;text-decoration:none;white-space:nowrap;
+}
+.btn-sm:hover{background:#dbeafe;}
+
 .invoice-raise-btn{
   display:block;text-align:center;padding:12px;
   background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
