@@ -95,7 +95,7 @@
 <table class="records-table" id="cust-dues-table">
 <thead>
 <tr>
-<th>ID</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Receive Amount</th>
+<th>ID</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th>
 </tr>
 </thead>
 <tbody id="customer-tbody">
@@ -111,12 +111,8 @@
 <td>{{ r.customer_name }}</td>
 <td>₹{{ r.total_amount }}</td>
 <td>₹{{ r.advance_paid }}</td>
-<td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ r.balance }}</td>
-<td>
-<form action="/add_payment/{{ r.id }}" method="POST" style="display:flex;gap:6px;" onsubmit="return confirmAmount(this,'Receive')">
-<input name="payment" placeholder="Amount">
-<button>Process</button>
-</form>
+<td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">
+  <a class="balance-link" href="/payment/{{ r.id }}">₹{{ r.balance }}</a>
 </td>
 </tr>
 {% endfor %}
@@ -164,7 +160,7 @@
 <table class="records-table" id="vendor-table">
 <thead>
 <tr>
-<th>Rental ID</th><th>Date</th><th>Vendor</th><th>Equipment</th><th>Total</th><th>Paid</th><th>Balance</th><th>Pay Vendor</th>
+<th>Rental ID</th><th>Date</th><th>Vendor</th><th>Equipment</th><th>Total</th><th>Paid</th><th>Balance</th>
 </tr>
 </thead>
 <tbody id="vendor-tbody">
@@ -190,13 +186,8 @@
 </td>
 <td>₹{{ v["total"] }}</td>
 <td>₹{{ v["paid"] }}</td>
-<td class="{% if v['balance'] > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ v["balance"] }}</td>
-<td>
-<form action="/pay_vendor_group/{{ v['rental_id'] }}" method="POST" style="display:flex;gap:6px;" onsubmit="return confirmAmount(this,'Pay vendor')">
-<input type="hidden" name="vendor_name" value="{{ v['vendor_name_raw'] }}">
-<input name="payment" placeholder="Amount">
-<button>Pay</button>
-</form>
+<td class="{% if v['balance'] > 0 %}balance-due{% else %}balance-clear{% endif %}">
+  <a class="balance-link" href="/vendor_payment/{{ v['rental_id'] }}?vendor={{ v['vendor_name_raw']|urlencode }}">₹{{ v["balance"] }}</a>
 </td>
 </tr>
 {% endfor %}

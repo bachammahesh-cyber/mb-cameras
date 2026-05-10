@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Pay Vendor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+  <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<div style="margin-bottom:12px;">
+  <a href="/credit_report" class="back-btn">← Financials</a>
+</div>
+
+<div class="card">
+
+  <div class="payment-header">
+    <div>
+      <div class="payment-name">{{ vendor_name or "Outside Vendor" }}</div>
+      <div class="payment-sub">Rental #{{ rental.id }}</div>
+    </div>
+    <div class="payment-meta">
+      <div>{{ rental.start_date[8:10] }}/{{ rental.start_date[5:7] }}/{{ rental.start_date[2:4] }}</div>
+    </div>
+  </div>
+
+  {% if items %}
+  <div class="payment-items">
+    {% for item in items %}
+    <div class="payment-item-row">
+      <span>{{ item.item_name }}</span>
+      <span>₹{{ item.rate_per_day }}/day × {{ item.days }}d = ₹{{ item.total }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="payment-summary">
+    <div class="payment-summary-row">
+      <span>Total</span><span>₹{{ total }}</span>
+    </div>
+    <div class="payment-summary-row">
+      <span>Paid</span><span>₹{{ paid }}</span>
+    </div>
+    <div class="payment-summary-row payment-balance-row">
+      <span>Balance</span>
+      <span class="{% if balance > 0 %}balance-due{% else %}balance-clear{% endif %}">₹{{ balance }}</span>
+    </div>
+  </div>
+
+  {% if balance > 0 %}
+  <form method="POST" class="payment-form" onsubmit="return confirmPay(this)">
+    <input type="hidden" name="vendor_name" value="{{ vendor_name }}">
+    <input type="number" name="payment" placeholder="Enter amount" required>
+    <button type="submit">Pay Vendor</button>
+  </form>
+  {% else %}
+  <div class="payment-cleared">✓ Cleared</div>
+  {% endif %}
+
+</div>
+</div>
+
+{% include "_nav.html" %}
+
+<script>
+function confirmPay(form) {
+    const val = form.querySelector('input[name="payment"]').value;
+    if (!val || isNaN(val) || parseFloat(val) <= 0) { alert('Enter a valid amount.'); return false; }
+    return confirm('Pay ₹' + parseFloat(val).toLocaleString('en-IN') + '?');
+}
+</script>
+
+</body>
+</html>

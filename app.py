@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, session, send_from_directory
+from urllib.parse import quote_plus
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ except ImportError:
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_this")
+app.jinja_env.filters['urlencode'] = quote_plus
 
 PRIMARY_TENANT_ID = "mb_cameras"
 DEMO_TENANT_ID = "demo_rental_house"
@@ -1886,6 +1888,121 @@ def pay_vendor_group(rental_id):
         conn.close()
 
     return redirect("/credit_report")
+
+
+@app.route("/payment/<int:rental_id>", methods=["GET", "POST"])
+def payment_page(rental_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    tenant_id = current_tenant_id()
+    conn = get_db()
+
+    rental = conn.execute(
+        "SELECT * FROM rentals WHERE id=? AND tenant_id=?",
+        (rental_id, tenant_id)
+    ).fetchone()
+
+    if not rental:
+        conn.close()
+        return redirect("/credit_report")
+
+    if request.method == "POST":
+        payment_text = request.form.get("payment", "").strip()
+        try:
+            payment = float(payment_text)
+        except ValueError:
+            payment = 0
+        if payment > 0:
+            updated_paid = min(rental["total_amount"], rental["advance_paid"] + payment)
+            balance = rental["total_amount"] - updated_paid
+            conn.execute(
+                "UPDATE rentals SET advance_paid=?, balance=? WHERE id=? AND tenant_id=?",
+                (updated_paid, balance, rental_id, tenant_id)
+            )
+            conn.commit()
+        conn.close()
+        return redirect(f"/payment/{rental_id}")
+
+    items = conn.execute(
+        """SELECT i.name, ri.rate_per_day, ri.days, ri.total
+           FROM rental_items ri
+           JOIN items i ON i.id = ri.item_id
+           WHERE ri.rental_id=? AND ri.tenant_id=?""",
+        (rental_id, tenant_id)
+    ).fetchall()
+    conn.close()
+
+    return render_template("payment.html", rental=rental, items=items)
+
+
+@app.route("/vendor_payment/<int:rental_id>", methods=["GET", "POST"])
+def vendor_payment_page(rental_id):
+
+    if "user_id" not in session:
+        return redirect("/")
+
+    vendor_name = request.args.get("vendor", "").strip()
+    tenant_id = current_tenant_id()
+    conn = get_db()
+
+    rental = conn.execute(
+        "SELECT * FROM rentals WHERE id=? AND tenant_id=?",
+        (rental_id, tenant_id)
+    ).fetchone()
+
+    if not rental:
+        conn.close()
+        return redirect("/credit_report")
+
+    if request.method == "POST":
+        vendor_name = request.form.get("vendor_name", vendor_name).strip()
+        payment_text = request.form.get("payment", "").strip()
+        try:
+            payment = float(payment_text)
+        except ValueError:
+            payment = 0
+        if payment > 0:
+            vendor_rows = conn.execute(
+                """SELECT id,total,COALESCE(paid,0) AS paid,
+                   COALESCE(balance,total-COALESCE(paid,0)) AS balance
+                   FROM outside_items
+                   WHERE rental_id=? AND tenant_id=? AND COALESCE(vendor_name,'')=?
+                   ORDER BY id ASC""",
+                (rental_id, tenant_id, vendor_name)
+            ).fetchall()
+            remaining = min(payment, sum(r["balance"] for r in vendor_rows))
+            for row in vendor_rows:
+                if remaining <= 0:
+                    break
+                row_pay = min(row["balance"], remaining)
+                if row_pay > 0:
+                    conn.execute(
+                        "UPDATE outside_items SET paid=?, balance=? WHERE id=? AND tenant_id=?",
+                        (row["paid"] + row_pay, row["total"] - row["paid"] - row_pay, row["id"], tenant_id)
+                    )
+                    remaining -= row_pay
+            conn.commit()
+        conn.close()
+        return redirect(f"/vendor_payment/{rental_id}?vendor={quote_plus(vendor_name)}")
+
+    vendor_items = conn.execute(
+        """SELECT * FROM outside_items
+           WHERE rental_id=? AND tenant_id=? AND COALESCE(vendor_name,'')=?""",
+        (rental_id, tenant_id, vendor_name)
+    ).fetchall()
+    conn.close()
+
+    total = sum(r["total"] or 0 for r in vendor_items)
+    paid = sum(r["paid"] or 0 for r in vendor_items)
+    balance = total - paid
+
+    return render_template("vendor_payment.html",
+                           rental=rental,
+                           vendor_name=vendor_name,
+                           items=vendor_items,
+                           total=total, paid=paid, balance=balance)
 
 
 # -----------------------

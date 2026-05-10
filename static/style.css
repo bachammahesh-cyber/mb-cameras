@@ -408,6 +408,26 @@ TABLES
 .balance-due{color:#dc2626;font-weight:600;}
 .balance-clear{color:#16a34a;font-weight:600;}
 
+/* Clickable balance link */
+.balance-link{color:inherit;font-weight:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;}
+.balance-link:hover{text-decoration-style:solid;}
+
+/* Payment detail page */
+.payment-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.payment-name{font-size:20px;font-weight:700;color:#0f172a;}
+.payment-sub{font-size:13px;color:#64748b;margin-top:2px;}
+.payment-meta{text-align:right;font-size:12px;color:#64748b;line-height:1.6;}
+.payment-items{margin:14px 0;border-top:1px solid #f1f5f9;padding-top:12px;display:flex;flex-direction:column;gap:4px;}
+.payment-item-row{display:flex;justify-content:space-between;font-size:13px;color:#475569;}
+.payment-summary{border-top:1px solid #f1f5f9;padding-top:12px;margin-top:4px;display:flex;flex-direction:column;gap:6px;}
+.payment-summary-row{display:flex;justify-content:space-between;font-size:14px;color:#64748b;}
+.payment-balance-row{font-size:17px;font-weight:700;color:#0f172a;margin-top:4px;}
+.payment-balance-row span:first-child{color:#0f172a;}
+.payment-form{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
+.payment-form input{font-size:16px;}
+.payment-form button{width:100%;padding:14px;font-size:16px;}
+.payment-cleared{margin-top:20px;text-align:center;color:#16a34a;font-weight:600;font-size:16px;padding:14px;background:#f0fdf4;border-radius:8px;}
+
 /* Back link */
 .back-link{display:inline-block;margin-bottom:14px;font-size:13px;color:#1e40af;text-decoration:none;}
 .back-link:hover{text-decoration:underline;}
@@ -882,32 +902,24 @@ font-size:16px;
 .records-table th,.records-table td{padding:10px 8px;font-size:13px;}
 .records-table{overflow-x:auto;}
 
-/* ── cust-dues-table: show Date(2) Customer(3) Balance(6) Receive(7) ── */
-/* records-table class hides 2,6,7 — override them back to visible */
+/* ── cust-dues-table: 6 cols → show Date(2) Customer(3) Balance(6) ── */
+/* records-table class hides 2,6 — override back to visible */
 #cust-dues-table th:nth-child(1),#cust-dues-table td:nth-child(1){display:none;}
 #cust-dues-table th:nth-child(2),#cust-dues-table td:nth-child(2){display:table-cell;}
 #cust-dues-table th:nth-child(4),#cust-dues-table td:nth-child(4){display:none;}
 #cust-dues-table th:nth-child(5),#cust-dues-table td:nth-child(5){display:none;}
 #cust-dues-table th:nth-child(6),#cust-dues-table td:nth-child(6){display:table-cell;}
-#cust-dues-table th:nth-child(7),#cust-dues-table td:nth-child(7){display:table-cell;}
 #cust-dues-table th,#cust-dues-table td{padding:10px 8px;font-size:13px;}
-#cust-dues-table td:nth-child(7) form{display:flex;gap:4px;}
-#cust-dues-table td:nth-child(7) form input{width:70px;min-width:0;}
-#cust-dues-table td:nth-child(7) form button{white-space:nowrap;padding:0 8px;}
 
-/* ── vendor-table: show Date(2) Vendor(3) Balance(7) Pay(8) ── */
-/* records-table class hides 2,7,8 — override them back to visible */
+/* ── vendor-table: 7 cols → show Date(2) Vendor(3) Balance(7) ── */
+/* records-table class hides 2,7 — override back to visible */
 #vendor-table th:nth-child(1),#vendor-table td:nth-child(1){display:none;}
 #vendor-table th:nth-child(2),#vendor-table td:nth-child(2){display:table-cell;}
 #vendor-table th:nth-child(4),#vendor-table td:nth-child(4){display:none;}
 #vendor-table th:nth-child(5),#vendor-table td:nth-child(5){display:none;}
 #vendor-table th:nth-child(6),#vendor-table td:nth-child(6){display:none;}
 #vendor-table th:nth-child(7),#vendor-table td:nth-child(7){display:table-cell;}
-#vendor-table th:nth-child(8),#vendor-table td:nth-child(8){display:table-cell;}
 #vendor-table th,#vendor-table td{padding:10px 8px;font-size:13px;}
-#vendor-table td:nth-child(8) form{display:flex;gap:4px;}
-#vendor-table td:nth-child(8) form input{width:70px;min-width:0;}
-#vendor-table td:nth-child(8) form button{white-space:nowrap;padding:0 8px;}
 
 /* ── Revenue cards: 2-column grid on mobile ── */
 .revenue-grid{grid-template-columns:1fr 1fr;}
