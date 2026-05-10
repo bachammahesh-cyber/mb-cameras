@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>{{ invoice.invoice_number }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band no-print">
+  <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<!-- Screen-only action bar -->
+<div class="invoice-actions no-print">
+  <a href="/payment/{{ rental.id }}" class="back-btn">← Payment</a>
+  <button onclick="window.print()" class="invoice-print-btn">Print / Save PDF</button>
+</div>
+
+<!-- Invoice document -->
+<div class="invoice-page">
+
+  <!-- Header -->
+  <div class="inv-header">
+    <div class="inv-company">
+      <div class="inv-company-name">MAHESH BACHAM FILMS PRIVATE LIMITED</div>
+      <div class="inv-company-sub">Hyderabad Telangana 500032 India</div>
+      <div class="inv-company-sub">connect@maheshbachamfilms.com</div>
+      <div class="inv-company-sub">GSTIN: 36AAPCM9528D1Z3</div>
+    </div>
+    <div class="inv-title-block">
+      <div class="inv-title">TAX INVOICE</div>
+    </div>
+  </div>
+
+  <!-- Meta row -->
+  <div class="inv-meta-row">
+    <div class="inv-meta-left">
+      <div><strong>#</strong> {{ invoice.invoice_number }}</div>
+      <div><strong>Invoice Date</strong> {{ invoice.invoice_date | fmt_date }}</div>
+      <div><strong>Terms</strong> Due on Receipt</div>
+      <div><strong>Due Date</strong> {{ invoice.invoice_date | fmt_date }}</div>
+    </div>
+    <div class="inv-meta-right">
+      <div><strong>Place Of Supply</strong> : Telangana (36)</div>
+    </div>
+  </div>
+
+  <!-- Bill To / Ship To -->
+  <div class="inv-parties">
+    <div class="inv-party">
+      <div class="inv-party-label">Bill To</div>
+      <div class="inv-party-name">{{ rental.customer_name }}</div>
+      {% if rental.phone %}<div class="inv-party-sub">{{ rental.phone }}</div>{% endif %}
+    </div>
+    {% if invoice.gst_type == 'gst' and invoice.customer_gstin %}
+    <div class="inv-party">
+      <div class="inv-party-label">Ship To</div>
+      <div class="inv-party-sub">GSTIN {{ invoice.customer_gstin }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Items table -->
+  {% if invoice.gst_type == 'gst' %}
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th class="inv-th-num">#</th>
+        <th>Item &amp; Description</th>
+        <th class="inv-th-center">HSN/SAC</th>
+        <th class="inv-th-center">Qty</th>
+        <th class="inv-th-right">Rate</th>
+        <th class="inv-th-right">CGST 9%</th>
+        <th class="inv-th-right">SGST 9%</th>
+        <th class="inv-th-right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i, item in items | enumerate %}
+      {% set rate = (item.rate_per_day or 0) * (item.days or 1) %}
+      {% set amount = item.total or 0 %}
+      <tr>
+        <td class="inv-td-num">{{ i + 1 }}</td>
+        <td>{{ item.name }}</td>
+        <td class="inv-td-center">997319</td>
+        <td class="inv-td-center">{{ item.quantity or 1 }}.00</td>
+        <td class="inv-td-right">{{ "%.2f"|format(rate) }}</td>
+        <td class="inv-td-right">{{ "%.2f"|format(amount * 0.09) }}</td>
+        <td class="inv-td-right">{{ "%.2f"|format(amount * 0.09) }}</td>
+        <td class="inv-td-right">{{ "%.2f"|format(amount) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <table class="inv-table">
+    <thead>
+      <tr>
+        <th class="inv-th-num">#</th>
+        <th>Item &amp; Description</th>
+        <th class="inv-th-center">Qty</th>
+        <th class="inv-th-right">Rate</th>
+        <th class="inv-th-right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i, item in items | enumerate %}
+      {% set rate = (item.rate_per_day or 0) * (item.days or 1) %}
+      {% set amount = item.total or 0 %}
+      <tr>
+        <td class="inv-td-num">{{ i + 1 }}</td>
+        <td>{{ item.name }}</td>
+        <td class="inv-td-center">{{ item.quantity or 1 }}.00</td>
+        <td class="inv-td-right">{{ "%.2f"|format(rate) }}</td>
+        <td class="inv-td-right">{{ "%.2f"|format(amount) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  <!-- Footer -->
+  <div class="inv-footer">
+    <div class="inv-footer-left">
+      <div class="inv-words"><strong>Total In Words</strong></div>
+      <div class="inv-words-text"><em>{{ amount_in_words }}</em></div>
+      <div class="inv-bank" style="margin-top:16px;">
+        <div><strong>Bank Details:</strong></div>
+        <div>Bank: HDFC BANK</div>
+        <div>Branch: Gachibowli</div>
+        <div>A/c No: 50200070683697</div>
+        <div>IFSC Code: HDFC0000968</div>
+        <div>PAN: AAPCM9528D</div>
+      </div>
+    </div>
+    <div class="inv-footer-right">
+      <div class="inv-totals">
+        <div class="inv-total-row">
+          <span>Sub Total</span><span>{{ "%.2f"|format(sub_total) }}</span>
+        </div>
+        {% if invoice.gst_type == 'gst' %}
+        <div class="inv-total-row">
+          <span>CGST9 (9%)</span><span>{{ "%.2f"|format(cgst) }}</span>
+        </div>
+        <div class="inv-total-row">
+          <span>SGST9 (9%)</span><span>{{ "%.2f"|format(sgst) }}</span>
+        </div>
+        {% endif %}
+        <div class="inv-total-row inv-total-grand">
+          <span>Total</span><span>₹{{ "%.2f"|format(grand_total) }}</span>
+        </div>
+        <div class="inv-total-row inv-total-balance">
+          <span>Balance Due</span><span>₹{{ "%.2f"|format(grand_total) }}</span>
+        </div>
+      </div>
+      <div class="inv-signature">
+        <div style="height:50px;"></div>
+        <div class="inv-signature-line">Authorized Signature</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /invoice-page -->
+
+{% include "_nav.html" %}
+
+</body>
+</html>

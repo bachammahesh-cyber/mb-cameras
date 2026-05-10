@@ -15,6 +15,7 @@ except ImportError:
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_this")
 app.jinja_env.filters['urlencode'] = quote_plus
+app.jinja_env.filters['enumerate'] = enumerate
 
 def fmt_date(s):
     try:
@@ -231,6 +232,19 @@ def init_db():
         )
         """)
 
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS invoices(
+            id BIGSERIAL PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'mb_cameras',
+            rental_id BIGINT,
+            invoice_number TEXT,
+            invoice_date TEXT,
+            gst_type TEXT,
+            customer_gstin TEXT,
+            created_at TEXT
+        )
+        """)
+
         postgres_tenant_migrations = {
             "users": "ALTER TABLE users ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
             "items": "ALTER TABLE items ADD COLUMN tenant_id TEXT DEFAULT 'mb_cameras'",
@@ -378,6 +392,19 @@ def init_db():
             name TEXT,
             phone TEXT,
             address TEXT
+        )
+        """)
+
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS invoices(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tenant_id TEXT DEFAULT 'mb_cameras',
+            rental_id INTEGER,
+            invoice_number TEXT,
+            invoice_date TEXT,
+            gst_type TEXT,
+            customer_gstin TEXT,
+            created_at TEXT
         )
         """)
 
@@ -1895,6 +1922,138 @@ def pay_vendor_group(rental_id):
         conn.close()
 
     return redirect("/credit_report")
+
+
+def num_to_words(n):
+    n = int(round(n))
+    ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+            "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+            "Seventeen", "Eighteen", "Nineteen"]
+    tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
+
+    def _below_1000(x):
+        if x == 0:
+            return ""
+        elif x < 20:
+            return ones[x]
+        elif x < 100:
+            rest = " " + ones[x % 10] if x % 10 else ""
+            return tens[x // 10] + rest
+        else:
+            rest = " " + _below_1000(x % 100) if x % 100 else ""
+            return ones[x // 100] + " Hundred" + rest
+
+    if n == 0:
+        return "Zero Rupees Only"
+    parts = []
+    if n >= 10000000:
+        parts.append(_below_1000(n // 10000000) + " Crore")
+        n %= 10000000
+    if n >= 100000:
+        parts.append(_below_1000(n // 100000) + " Lakh")
+        n %= 100000
+    if n >= 1000:
+        parts.append(_below_1000(n // 1000) + " Thousand")
+        n %= 1000
+    if n > 0:
+        parts.append(_below_1000(n))
+    return " ".join(parts) + " Rupees Only"
+
+
+@app.route("/invoice/new/<int:rental_id>")
+def invoice_new(rental_id):
+    if "user_id" not in session:
+        return redirect("/")
+    tenant_id = current_tenant_id()
+    conn = get_db()
+    rental = conn.execute(
+        "SELECT * FROM rentals WHERE id=? AND tenant_id=?",
+        (rental_id, tenant_id)
+    ).fetchone()
+    conn.close()
+    if not rental:
+        return redirect("/credit_report")
+    return render_template("invoice_form.html", rental=rental)
+
+
+@app.route("/invoice/create/<int:rental_id>", methods=["POST"])
+def invoice_create(rental_id):
+    if "user_id" not in session:
+        return redirect("/")
+    tenant_id = current_tenant_id()
+    gst_type = request.form.get("gst_type", "no_gst")
+    customer_gstin = request.form.get("customer_gstin", "").strip()
+    today = datetime.now()
+    today_str = today.strftime("%Y%m%d")
+    invoice_date = today.strftime("%Y-%m-%d")
+    created_at = today.strftime("%Y-%m-%d %H:%M:%S")
+    conn = get_db()
+    try:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM invoices WHERE tenant_id=? AND invoice_number LIKE ?",
+            (tenant_id, f"INV-{today_str}%")
+        ).fetchone()[0]
+        invoice_number = f"INV-{today_str}{count + 1:02d}"
+        if USE_POSTGRES:
+            invoice_id = conn.execute(
+                """INSERT INTO invoices(tenant_id,rental_id,invoice_number,invoice_date,gst_type,customer_gstin,created_at)
+                   VALUES(?,?,?,?,?,?,?) RETURNING id""",
+                (tenant_id, rental_id, invoice_number, invoice_date, gst_type, customer_gstin, created_at)
+            ).fetchone()["id"]
+        else:
+            conn.execute(
+                """INSERT INTO invoices(tenant_id,rental_id,invoice_number,invoice_date,gst_type,customer_gstin,created_at)
+                   VALUES(?,?,?,?,?,?,?)""",
+                (tenant_id, rental_id, invoice_number, invoice_date, gst_type, customer_gstin, created_at)
+            )
+            invoice_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
+        conn.commit()
+    finally:
+        conn.close()
+    return redirect(f"/invoice/{invoice_id}")
+
+
+@app.route("/invoice/<int:invoice_id>")
+def invoice_view(invoice_id):
+    if "user_id" not in session:
+        return redirect("/")
+    tenant_id = current_tenant_id()
+    conn = get_db()
+    invoice = conn.execute(
+        "SELECT * FROM invoices WHERE id=? AND tenant_id=?",
+        (invoice_id, tenant_id)
+    ).fetchone()
+    if not invoice:
+        conn.close()
+        return redirect("/credit_report")
+    rental = conn.execute(
+        "SELECT * FROM rentals WHERE id=? AND tenant_id=?",
+        (invoice["rental_id"], tenant_id)
+    ).fetchone()
+    items = conn.execute(
+        """SELECT i.name, ri.rate_per_day, ri.days, ri.total,
+                  COALESCE(ri.quantity, 1) AS quantity
+           FROM rental_items ri
+           JOIN items i ON i.id = ri.item_id
+           WHERE ri.rental_id=? AND ri.tenant_id=?""",
+        (invoice["rental_id"], tenant_id)
+    ).fetchall()
+    conn.close()
+    sub_total = sum(row["total"] or 0 for row in items)
+    cgst = round(sub_total * 0.09, 2) if invoice["gst_type"] == "gst" else 0
+    sgst = round(sub_total * 0.09, 2) if invoice["gst_type"] == "gst" else 0
+    grand_total = sub_total + cgst + sgst
+    return render_template(
+        "invoice.html",
+        invoice=invoice,
+        rental=rental,
+        items=items,
+        sub_total=sub_total,
+        cgst=cgst,
+        sgst=sgst,
+        grand_total=grand_total,
+        amount_in_words=num_to_words(grand_total),
+    )
 
 
 @app.route("/payment/<int:rental_id>", methods=["GET", "POST"])

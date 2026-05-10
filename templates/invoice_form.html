@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Raise Invoice</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+  <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<div style="margin-bottom:12px;">
+  <a href="/payment/{{ rental.id }}" class="back-btn">← Payment</a>
+</div>
+
+<div class="card">
+
+  <h2 class="page-title" style="margin-bottom:4px;">Raise Invoice</h2>
+  <div style="color:#64748b;font-size:14px;margin-bottom:24px;">{{ rental.customer_name }} · #{{ rental.id }}</div>
+
+  <form method="POST" action="/invoice/create/{{ rental.id }}">
+
+    <label style="margin-bottom:10px;display:block;">Invoice Type</label>
+    <div class="inv-type-toggle">
+      <label class="inv-type-option">
+        <input type="radio" name="gst_type" value="no_gst" checked onchange="toggleGstin(this)">
+        <span>Non-GST</span>
+      </label>
+      <label class="inv-type-option">
+        <input type="radio" name="gst_type" value="gst" onchange="toggleGstin(this)">
+        <span>GST</span>
+      </label>
+    </div>
+
+    <div id="gstin-row" style="display:none;margin-top:16px;">
+      <label>Customer GSTIN</label>
+      <input type="text" name="customer_gstin" id="customer_gstin"
+             placeholder="e.g. 36AAHCR8603G1ZA" maxlength="15"
+             style="text-transform:uppercase;">
+    </div>
+
+    <button type="submit" style="width:100%;margin-top:24px;padding:14px;font-size:16px;">
+      Generate Invoice
+    </button>
+
+  </form>
+
+</div>
+</div>
+
+{% include "_nav.html" %}
+
+<script>
+function toggleGstin(radio) {
+    document.getElementById('gstin-row').style.display =
+        radio.value === 'gst' ? 'block' : 'none';
+}
+</script>
+
+</body>
+</html>
