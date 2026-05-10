@@ -62,7 +62,7 @@
       {% else %}
       <div class="inv-party-name">{{ rental.customer_name }}</div>
       {% endif %}
-      {% if rental.phone %}<div class="inv-party-sub">{{ rental.phone }}</div>{% endif %}
+      {% if invoice.gst_type != 'gst' and rental.phone %}<div class="inv-party-sub">{{ rental.phone }}</div>{% endif %}
       {% if invoice.gst_type == 'gst' and invoice.customer_gstin %}
       <div class="inv-party-sub">GSTIN {{ invoice.customer_gstin }}</div>
       {% endif %}
