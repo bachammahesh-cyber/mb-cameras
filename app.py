@@ -1756,6 +1756,53 @@ def delete_rental(rental_id):
 # Credit report
 # -----------------------
 
+@app.route("/vendor_dues")
+def vendor_dues_page():
+    if "user_id" not in session:
+        return redirect("/")
+    tenant_id = current_tenant_id()
+    conn = get_db()
+    vendor_rows = conn.execute(
+        """SELECT oi.*, r.start_date
+           FROM outside_items oi
+           JOIN rentals r ON r.id = oi.rental_id
+           WHERE oi.tenant_id=?
+           ORDER BY r.start_date DESC, oi.id DESC""",
+        (tenant_id,)
+    ).fetchall()
+    conn.close()
+    grouped_vendors = []
+    groups = {}
+    for row in vendor_rows:
+        vendor_name = (row["vendor_name"] or "").strip()
+        key = (row["rental_id"], vendor_name)
+        if key not in groups:
+            groups[key] = {
+                "rental_id": row["rental_id"],
+                "start_date": row["start_date"],
+                "vendor_name_raw": vendor_name,
+                "vendor_name": vendor_name or "Outside Vendor",
+                "total": 0, "paid": 0, "balance": 0, "items": []
+            }
+            grouped_vendors.append(groups[key])
+        group = groups[key]
+        row_total = row["total"] or 0
+        row_paid = row["paid"] or 0
+        row_balance = row["balance"]
+        if row_balance is None:
+            row_balance = row_total - row_paid
+        group["total"] += row_total
+        group["paid"] += row_paid
+        group["balance"] += row_balance
+        group["items"].append({
+            "name": row["item_name"],
+            "rate_per_day": row["rate_per_day"],
+            "days": row["days"],
+            "total": row_total
+        })
+    return render_template("vendor_dues.html", vendors=grouped_vendors)
+
+
 @app.route("/customer_dues")
 def customer_dues_page():
     if "user_id" not in session:

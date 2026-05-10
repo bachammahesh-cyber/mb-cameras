@@ -1,96 +1,142 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Vendor Dues</title>
+<title>Vendor Payments</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MB Cameras">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
 <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
 <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body class="with-logout-band">
-
 <div class="header brand-band">
-<h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+  <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
 </div>
-
 <div class="container">
-
-<h2>Due to Vendors</h2>
-
-<table class="records-table">
-
+<div class="box financial-box">
+<h2 style="margin:0 0 10px;">Vendor Payments</h2>
+<div class="filter-bar" style="margin-bottom:12px;">
+  <input type="text" id="search-vendor" placeholder="Search vendor…" oninput="applyVendFilter()">
+  <div class="status-filters">
+    <button class="filter-btn active" id="v-btn-month" onclick="setVendPeriod('month')"></button>
+    <button class="filter-btn" id="v-btn-all" onclick="setVendPeriod('all')">All Time</button>
+  </div>
+  <div class="date-filters">
+    <input type="date" id="v-from" onchange="onVendDateChange()" title="From">
+    <span>–</span>
+    <input type="date" id="v-to" onchange="onVendDateChange()" title="To">
+  </div>
+  <span class="filter-divider"></span>
+  <div class="status-filters">
+    <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this)">All</button>
+    <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this)">Due</button>
+    <button class="filter-btn is-bal" data-bal="clear" onclick="setBalFilter(this)">Cleared</button>
+  </div>
+  <select class="mob-drop" id="v-mob-period" onchange="mobVendPeriod(this.value)">
+    <option value="month" id="v-mob-opt"></option>
+    <option value="all">All Time</option>
+    <option value="custom">Custom…</option>
+  </select>
+  <select class="mob-drop" id="v-mob-bal" onchange="mobVendBal(this.value)">
+    <option value="all">All</option>
+    <option value="due">Due</option>
+    <option value="clear">Cleared</option>
+  </select>
+  <div class="mob-date-row" id="v-mob-dates" style="display:none;">
+    <input type="date" id="v-mob-from" onchange="mobVendDate()">
+    <span>–</span>
+    <input type="date" id="v-mob-to" onchange="mobVendDate()">
+  </div>
+</div>
+<table class="records-table" id="vendor-table">
 <thead>
 <tr>
-<th>Vendor</th>
-<th>Equipment</th>
-<th>Total</th>
-<th>Paid</th>
-<th>Balance</th>
-<th>Action</th>
+<th>Rental ID</th><th>Date</th><th>Vendor</th><th>Equipment</th><th>Total</th><th>Paid</th><th>Balance</th>
 </tr>
 </thead>
-
-<tbody>
-
+<tbody id="vendor-tbody">
 {% for v in vendors %}
-
-<tr>
-
+<tr data-search="{{ v['vendor_name'] | lower }}"
+    data-bal="{% if v['balance'] > 0 %}due{% else %}clear{% endif %}"
+    data-date="{{ v['start_date'] }}"
+    data-vtotal="{{ v['total'] or 0 }}"
+    data-vpaid="{{ v['paid'] or 0 }}"
+    data-vbalance="{{ v['balance'] or 0 }}">
+<td>{{ v["rental_id"] }}</td>
+<td>{{ v["start_date"] | fmt_date }}</td>
 <td>{{ v["vendor_name"] }}</td>
-
-<td>{{ v["item_name"] }}</td>
-
-<td>₹{{ v["total"] }}</td>
-
-<td>₹{{ v["paid"] }}</td>
-
-<td>₹{{ v["balance"] }}</td>
-
 <td>
-
-{% if v["balance"] > 0 %}
-
-<form method="POST" action="/pay_vendor/{{ v['id'] }}" onsubmit="return confirmVendorPay(this)">
-
-<input type="number" name="payment" placeholder="Payment">
-
-<button type="submit">Pay</button>
-
-</form>
-
-{% else %}
-
-✅ Fully Paid
-
-{% endif %}
-
-</td>
-
-</tr>
-
+<details>
+<summary>View items ({{ v["items"]|length }})</summary>
+<ul style="margin:8px 0 0 18px;padding:0;">
+{% for item in v["items"] %}
+<li>{{ item.name }} — {{ item.rate_per_day }}/day — {{ item.days }} day(s) — {{ item.total }}</li>
 {% endfor %}
-
+</ul>
+</details>
+</td>
+<td>{{ v["total"] }}</td>
+<td>{{ v["paid"] }}</td>
+<td class="{% if v['balance'] > 0 %}balance-due{% else %}balance-clear{% endif %}">
+  <a class="balance-link" href="/vendor_payment/{{ v['rental_id'] }}?vendor={{ v['vendor_name_raw']|urlencode }}">{{ v["balance"] }}</a>
+</td>
+</tr>
+{% endfor %}
 </tbody>
-
 </table>
-
+<p id="no-vendor" style="display:none;padding:10px;color:#888;">No entries match.</p>
 </div>
-
+</div>
 {% include "_nav.html" %}
-
 <script>
-function confirmVendorPay(form) {
-    const amount = form.querySelector('input[name="payment"]').value.trim();
-    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-        alert('Please enter a valid amount first.');
-        return false;
-    }
-    return confirm('Pay vendor ₹' + parseFloat(amount).toLocaleString('en-IN') + '?');
+const now = new Date();
+const MONTH_LABEL = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear();
+document.getElementById('v-mob-opt').textContent = MONTH_LABEL;
+function getMonthRange() {
+    const y = now.getFullYear(), m = now.getMonth();
+    return { from: new Date(y,m,1).toISOString().slice(0,10), to: new Date(y,m+1,0).toISOString().slice(0,10) };
 }
+let vendFrom='', vendTo='', balState='all';
+function setVendPeriod(mode) {
+    if (mode==='month'){const r=getMonthRange();vendFrom=r.from;vendTo=r.to;document.getElementById('v-from').value=vendFrom;document.getElementById('v-to').value=vendTo;}
+    else{vendFrom='';vendTo='';document.getElementById('v-from').value='';document.getElementById('v-to').value='';}
+    document.getElementById('v-btn-month').classList.toggle('active',mode==='month');
+    document.getElementById('v-btn-all').classList.toggle('active',mode==='all');
+    applyVendFilter();
+}
+function onVendDateChange() {
+    vendFrom=document.getElementById('v-from').value;vendTo=document.getElementById('v-to').value;
+    document.getElementById('v-btn-month').classList.remove('active');document.getElementById('v-btn-all').classList.remove('active');
+    applyVendFilter();
+}
+function applyVendFilter() {
+    const search=document.getElementById('search-vendor').value.toLowerCase().trim();let vis=0;
+    document.querySelectorAll('#vendor-tbody tr').forEach(row=>{
+        const date=row.dataset.date||'';
+        const show=(!vendFrom||date>=vendFrom)&&(!vendTo||date<=vendTo)&&(!search||(row.dataset.search||'').includes(search))&&(balState==='all'||row.dataset.bal===balState);
+        row.style.display=show?'':'none';if(show)vis++;
+    });
+    document.getElementById('no-vendor').style.display=vis===0?'':'none';
+}
+function setBalFilter(btn) {
+    btn.closest('.status-filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');balState=btn.dataset.bal;applyVendFilter();
+}
+function mobVendPeriod(val) {
+    const dr=document.getElementById('v-mob-dates');
+    if(val==='month'){setVendPeriod('month');dr.style.display='none';}
+    else if(val==='all'){setVendPeriod('all');dr.style.display='none';}
+    else{dr.style.display='flex';}
+}
+function mobVendDate() {
+    document.getElementById('v-from').value=document.getElementById('v-mob-from').value;
+    document.getElementById('v-to').value=document.getElementById('v-mob-to').value;
+    onVendDateChange();
+}
+function mobVendBal(val){balState=val;applyVendFilter();}
+setVendPeriod('month');
 </script>
 </body>
 </html>
