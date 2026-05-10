@@ -16,6 +16,13 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret_key_change_this")
 app.jinja_env.filters['urlencode'] = quote_plus
 
+def fmt_date(s):
+    try:
+        return datetime.strptime(str(s), "%Y-%m-%d").strftime("%d/%m/%y")
+    except (TypeError, ValueError):
+        return s or ""
+app.jinja_env.filters['fmt_date'] = fmt_date
+
 PRIMARY_TENANT_ID = "mb_cameras"
 DEMO_TENANT_ID = "demo_rental_house"
 DEMO_USERNAME = "demo"
@@ -1239,7 +1246,7 @@ def rental_records():
         start_date = row["start_date"]
         end_date = row["end_date"]
         rental_days = 0
-        given_date_display = start_date
+        given_date_display = ""
 
         try:
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
@@ -1249,7 +1256,7 @@ def rental_records():
                 rental_days = 0
             given_date_display = start_dt.strftime("%d/%m/%y")
         except (TypeError, ValueError):
-            pass
+            given_date_display = start_date or ""
 
         rentals.append({
             **dict(row),

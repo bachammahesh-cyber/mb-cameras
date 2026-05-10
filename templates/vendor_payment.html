@@ -31,7 +31,7 @@
       <div class="payment-sub">Rental #{{ rental.id }}</div>
     </div>
     <div class="payment-meta">
-      <div>{{ rental.start_date[8:10] }}/{{ rental.start_date[5:7] }}/{{ rental.start_date[2:4] }}</div>
+      <div>{{ rental.start_date | fmt_date }}</div>
     </div>
   </div>
 

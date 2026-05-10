@@ -107,7 +107,7 @@
     data-paid="{{ r.advance_paid or 0 }}"
     data-balance="{{ r.balance or 0 }}">
 <td>{{ r.id }}</td>
-<td>{{ r.start_date[8:10] }}/{{ r.start_date[5:7] }}/{{ r.start_date[2:4] }}</td>
+<td>{{ r.start_date | fmt_date }}</td>
 <td>{{ r.customer_name }}</td>
 <td>₹{{ r.total_amount }}</td>
 <td>₹{{ r.advance_paid }}</td>
@@ -172,7 +172,7 @@
     data-vpaid="{{ v['paid'] or 0 }}"
     data-vbalance="{{ v['balance'] or 0 }}">
 <td>{{ v["rental_id"] }}</td>
-<td>{{ v["start_date"][8:10] }}/{{ v["start_date"][5:7] }}/{{ v["start_date"][2:4] }}</td>
+<td>{{ v["start_date"] | fmt_date }}</td>
 <td>{{ v["vendor_name"] }}</td>
 <td>
 <details>
