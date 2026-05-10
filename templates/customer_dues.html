@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Customer Dues</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MB Cameras">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+<link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="with-logout-band">
+
+<div class="header brand-band">
+  <h2 class="brand-title"><a class="brand-home" href="/dashboard">MB CAMERAS</a></h2>
+</div>
+
+<div class="container">
+
+<div class="box financial-box">
+<h2 style="margin:0 0 10px;">Customer Dues</h2>
+<div class="filter-bar" style="margin-bottom:12px;">
+  <input type="text" id="search-customer" placeholder="Search customer or ID…" oninput="applyCustFilter()">
+  <div class="status-filters">
+    <button class="filter-btn active" id="c-btn-month" onclick="setCustPeriod('month')"></button>
+    <button class="filter-btn" id="c-btn-all" onclick="setCustPeriod('all')">All Time</button>
+  </div>
+  <div class="date-filters">
+    <input type="date" id="c-from" onchange="onCustDateChange()" title="From">
+    <span>–</span>
+    <input type="date" id="c-to" onchange="onCustDateChange()" title="To">
+  </div>
+  <span class="filter-divider"></span>
+  <div class="status-filters">
+    <button class="filter-btn is-bal active" data-bal="all" onclick="setBalFilter(this)">All</button>
+    <button class="filter-btn is-bal" data-bal="due" onclick="setBalFilter(this)">Due</button>
+    <button class="filter-btn is-bal" data-bal="clear" onclick="setBalFilter(this)">Cleared</button>
+  </div>
+  <select class="mob-drop" id="c-mob-period" onchange="mobCustPeriod(this.value)">
+    <option value="month" id="c-mob-opt"></option>
+    <option value="all">All Time</option>
+    <option value="custom">Custom…</option>
+  </select>
+  <select class="mob-drop" id="c-mob-bal" onchange="mobCustBal(this.value)">
+    <option value="all">All</option>
+    <option value="due">Due</option>
+    <option value="clear">Cleared</option>
+  </select>
+  <div class="mob-date-row" id="c-mob-dates" style="display:none;">
+    <input type="date" id="c-mob-from" onchange="mobCustDate()">
+    <span>–</span>
+    <input type="date" id="c-mob-to" onchange="mobCustDate()">
+  </div>
+</div>
+<table class="records-table" id="cust-dues-table">
+<thead>
+<tr>
+<th>ID</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th>
+</tr>
+</thead>
+<tbody id="customer-tbody">
+{% for r in rentals %}
+<tr data-search="{{ r.customer_name | lower }} {{ r.id }}"
+    data-bal="{% if r.balance > 0 %}due{% else %}clear{% endif %}"
+    data-date="{{ r.start_date }}"
+    data-total="{{ r.total_amount or 0 }}"
+    data-paid="{{ r.advance_paid or 0 }}"
+    data-balance="{{ r.balance or 0 }}">
+<td>{{ r.id }}</td>
+<td>{{ r.start_date | fmt_date }}</td>
+<td>{{ r.customer_name }}</td>
+<td>₹{{ r.total_amount }}</td>
+<td>₹{{ r.advance_paid }}</td>
+<td class="{% if r.balance > 0 %}balance-due{% else %}balance-clear{% endif %}">
+  <a class="balance-link" href="/payment/{{ r.id }}">₹{{ r.balance }}</a>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<p id="no-customer" style="display:none;padding:10px;color:#888;">No entries match.</p>
+</div>
+
+</div>
+
+{% include "_nav.html" %}
+
+<script>
+const now = new Date();
+const MONTH_LABEL = now.toLocaleString('default', { month: 'long' }) + ' ' + now.getFullYear();
+document.getElementById('c-mob-opt').textContent = MONTH_LABEL;
+
+function getMonthRange() {
+    const y = now.getFullYear(), m = now.getMonth();
+    const from = new Date(y, m, 1).toISOString().slice(0,10);
+    const to   = new Date(y, m+1, 0).toISOString().slice(0,10);
+    return { from, to };
+}
+
+let custFrom = '', custTo = '';
+let balState = 'all';
+
+function setCustPeriod(mode) {
+    if (mode === 'month') { const r = getMonthRange(); custFrom = r.from; custTo = r.to; document.getElementById('c-from').value = custFrom; document.getElementById('c-to').value = custTo; }
+    else { custFrom = ''; custTo = ''; document.getElementById('c-from').value = ''; document.getElementById('c-to').value = ''; }
+    document.getElementById('c-btn-month').classList.toggle('active', mode === 'month');
+    document.getElementById('c-btn-all').classList.toggle('active', mode === 'all');
+    applyCustFilter();
+}
+
+function onCustDateChange() {
+    custFrom = document.getElementById('c-from').value;
+    custTo   = document.getElementById('c-to').value;
+    document.getElementById('c-btn-month').classList.remove('active');
+    document.getElementById('c-btn-all').classList.remove('active');
+    applyCustFilter();
+}
+
+function applyCustFilter() {
+    const search = document.getElementById('search-customer').value.toLowerCase().trim();
+    let vis = 0;
+    document.querySelectorAll('#customer-tbody tr').forEach(row => {
+        const date = row.dataset.date || '';
+        const show = (!custFrom || date >= custFrom) && (!custTo || date <= custTo)
+            && (!search || (row.dataset.search || '').includes(search))
+            && (balState === 'all' || row.dataset.bal === balState);
+        row.style.display = show ? '' : 'none';
+        if (show) vis++;
+    });
+    document.getElementById('no-customer').style.display = vis === 0 ? '' : 'none';
+}
+
+function setBalFilter(btn) {
+    btn.closest('.status-filters').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    balState = btn.dataset.bal;
+    applyCustFilter();
+}
+
+function mobCustPeriod(val) {
+    const dr = document.getElementById('c-mob-dates');
+    if (val === 'month') { setCustPeriod('month'); dr.style.display = 'none'; }
+    else if (val === 'all') { setCustPeriod('all'); dr.style.display = 'none'; }
+    else { dr.style.display = 'flex'; }
+}
+function mobCustDate() {
+    document.getElementById('c-from').value = document.getElementById('c-mob-from').value;
+    document.getElementById('c-to').value   = document.getElementById('c-mob-to').value;
+    onCustDateChange();
+}
+function mobCustBal(val) { balState = val; applyCustFilter(); }
+
+setCustPeriod('month');
+</script>
+
+</body>
+</html>

@@ -1756,6 +1756,20 @@ def delete_rental(rental_id):
 # Credit report
 # -----------------------
 
+@app.route("/customer_dues")
+def customer_dues_page():
+    if "user_id" not in session:
+        return redirect("/")
+    tenant_id = current_tenant_id()
+    conn = get_db()
+    rentals = conn.execute(
+        "SELECT * FROM rentals WHERE tenant_id=? ORDER BY start_date DESC, id DESC",
+        (tenant_id,)
+    ).fetchall()
+    conn.close()
+    return render_template("customer_dues.html", rentals=rentals)
+
+
 @app.route("/credit_report")
 def credit_report():
 
