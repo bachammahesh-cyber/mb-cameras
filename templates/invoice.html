@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icon-192.png') }}">
 <link rel="manifest" href="{{ url_for('static', filename='manifest.webmanifest') }}">
 <link rel="stylesheet" href="/static/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body class="with-logout-band">
@@ -20,7 +21,7 @@
 <!-- Screen-only action bar -->
 <div class="invoice-actions no-print">
   <a href="/payment/{{ rental.id }}" class="back-btn">← Payment</a>
-  <button onclick="window.print()" class="invoice-print-btn">Print / Save PDF</button>
+  <button onclick="downloadPDF()" class="invoice-print-btn">Download PDF</button>
 </div>
 
 <!-- Invoice document -->
@@ -170,6 +171,28 @@
 </div><!-- /invoice-page -->
 
 {% include "_nav.html" %}
+
+<script>
+function downloadPDF() {
+  const btn = document.querySelector('.invoice-print-btn');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  html2pdf()
+    .set({
+      margin: 8,
+      filename: '{{ invoice.invoice_number }}.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    })
+    .from(document.querySelector('.invoice-page'))
+    .save()
+    .then(() => {
+      btn.disabled = false;
+      btn.textContent = 'Download PDF';
+    });
+}
+</script>
 
 </body>
 </html>
