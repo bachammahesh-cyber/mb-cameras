@@ -36,7 +36,7 @@
       <div class="inv-company-sub">GSTIN: 36AAPCM9528D1Z3</div>
     </div>
     <div class="inv-title-block">
-      <div class="inv-title">TAX INVOICE</div>
+      <div class="inv-title">{% if invoice.gst_type == 'gst' %}TAX INVOICE{% else %}INVOICE{% endif %}</div>
     </div>
   </div>
 
@@ -63,6 +63,7 @@
     {% if invoice.gst_type == 'gst' and invoice.customer_gstin %}
     <div class="inv-party">
       <div class="inv-party-label">Ship To</div>
+      {% if invoice.customer_gst_name %}<div class="inv-party-name">{{ invoice.customer_gst_name }}</div>{% endif %}
       <div class="inv-party-sub">GSTIN {{ invoice.customer_gstin }}</div>
     </div>
     {% endif %}

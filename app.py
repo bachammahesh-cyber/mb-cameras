@@ -241,6 +241,7 @@ def init_db():
             invoice_date TEXT,
             gst_type TEXT,
             customer_gstin TEXT,
+            customer_gst_name TEXT,
             created_at TEXT
         )
         """)
@@ -319,6 +320,14 @@ def init_db():
         """).fetchone()
         if not items_cid_exists:
             conn.execute("ALTER TABLE items ADD COLUMN custom_id TEXT")
+
+        inv_gst_name_exists = conn.execute("""
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_name='invoices' AND column_name='customer_gst_name'
+        """).fetchone()
+        if not inv_gst_name_exists:
+            conn.execute("ALTER TABLE invoices ADD COLUMN customer_gst_name TEXT")
     else:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS users(
@@ -404,6 +413,7 @@ def init_db():
             invoice_date TEXT,
             gst_type TEXT,
             customer_gstin TEXT,
+            customer_gst_name TEXT,
             created_at TEXT
         )
         """)
@@ -477,6 +487,14 @@ def init_db():
         ]
         if "custom_id" not in items_cols:
             conn.execute("ALTER TABLE items ADD COLUMN custom_id TEXT")
+
+        inv_cols = [
+            row["name"] for row in conn.execute(
+                "PRAGMA table_info(invoices)"
+            ).fetchall()
+        ]
+        if "customer_gst_name" not in inv_cols:
+            conn.execute("ALTER TABLE invoices ADD COLUMN customer_gst_name TEXT")
 
     conn.execute("""
     UPDATE outside_items
@@ -1982,7 +2000,8 @@ def invoice_create(rental_id):
         return redirect("/")
     tenant_id = current_tenant_id()
     gst_type = request.form.get("gst_type", "no_gst")
-    customer_gstin = request.form.get("customer_gstin", "").strip()
+    customer_gstin = request.form.get("customer_gstin", "").strip().upper()
+    customer_gst_name = request.form.get("customer_gst_name", "").strip()
     today = datetime.now()
     today_str = today.strftime("%Y%m%d")
     invoice_date = today.strftime("%Y-%m-%d")
@@ -1997,15 +2016,15 @@ def invoice_create(rental_id):
         invoice_number = f"INV-{today_str}{count + 1:02d}"
         if USE_POSTGRES:
             invoice_id = conn.execute(
-                """INSERT INTO invoices(tenant_id,rental_id,invoice_number,invoice_date,gst_type,customer_gstin,created_at)
-                   VALUES(?,?,?,?,?,?,?) RETURNING id""",
-                (tenant_id, rental_id, invoice_number, invoice_date, gst_type, customer_gstin, created_at)
+                """INSERT INTO invoices(tenant_id,rental_id,invoice_number,invoice_date,gst_type,customer_gstin,customer_gst_name,created_at)
+                   VALUES(?,?,?,?,?,?,?,?) RETURNING id""",
+                (tenant_id, rental_id, invoice_number, invoice_date, gst_type, customer_gstin, customer_gst_name, created_at)
             ).fetchone()["id"]
         else:
             conn.execute(
-                """INSERT INTO invoices(tenant_id,rental_id,invoice_number,invoice_date,gst_type,customer_gstin,created_at)
-                   VALUES(?,?,?,?,?,?,?)""",
-                (tenant_id, rental_id, invoice_number, invoice_date, gst_type, customer_gstin, created_at)
+                """INSERT INTO invoices(tenant_id,rental_id,invoice_number,invoice_date,gst_type,customer_gstin,customer_gst_name,created_at)
+                   VALUES(?,?,?,?,?,?,?,?)""",
+                (tenant_id, rental_id, invoice_number, invoice_date, gst_type, customer_gstin, customer_gst_name, created_at)
             )
             invoice_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
         conn.commit()
