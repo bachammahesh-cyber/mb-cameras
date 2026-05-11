@@ -373,11 +373,11 @@ transform:translateY(-2px);
 .dash-tile-label{font-size:13px;font-weight:600;color:#1e293b;}
 
 /* Accent colours */
-.dash-tile-active {border-left:4px solid #0b3f6f;}
-.dash-tile-new    {border-left:4px solid #15803d;}
-.dash-tile-invoice{border-left:4px solid #7c3aed;}
-.dash-tile-receive{border-left:4px solid #0f766e;}
-.dash-tile-vendor {border-left:4px solid #b45309;}
+.dash-tile-active {border-left:4px solid #0a2f5e;}
+.dash-tile-new    {border-left:4px solid #1a4f8a;}
+.dash-tile-invoice{border-left:4px solid #2563eb;}
+.dash-tile-receive{border-left:4px solid #3b82f6;}
+.dash-tile-vendor {border-left:4px solid #60a5fa;}
 
 /* ------------------------
 TABLES
