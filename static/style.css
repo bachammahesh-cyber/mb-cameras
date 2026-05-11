@@ -526,7 +526,7 @@ margin-top:20px;
 background:white;
 border:1px solid #e5e7eb;
 border-radius:8px;
-overflow:hidden;
+overflow-x:auto;
 }
 
 .records-table form{
@@ -979,9 +979,8 @@ font-size:16px;
 .records-table th:nth-child(6),.records-table td:nth-child(6){display:none;}
 .records-table th:nth-child(7),.records-table td:nth-child(7){display:none;}
 .records-table th:nth-child(8),.records-table td:nth-child(8){display:none;}
-.records-table th:nth-child(11),.records-table td:nth-child(11){display:none;}
+.desktop-only{display:none;}
 .records-table th,.records-table td{padding:10px 8px;font-size:13px;}
-.records-table{overflow-x:auto;}
 
 /* ── cust-dues-table: 6 cols → show Date(2) Customer(3) Balance(6) ── */
 /* records-table class hides 2,6 — override back to visible */

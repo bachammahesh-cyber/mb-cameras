@@ -74,7 +74,7 @@
 <th>Balance</th>
 <th>Status</th>
 {% if role == "owner" %}
-<th>Actions</th>
+<th class="desktop-only">Actions</th>
 {% endif %}
 </tr>
 </thead>
@@ -121,7 +121,7 @@
 {% endif %}
 </td>
 {% if role == "owner" %}
-<td>
+<td class="desktop-only">
 <div class="table-actions">
 <a class="mini-btn mini-btn-edit" href="/edit_rental/{{ r.id }}">Edit</a>
 <form method="POST" action="/delete_rental/{{ r.id }}" onsubmit="return confirm('Delete this rental entry?');">
