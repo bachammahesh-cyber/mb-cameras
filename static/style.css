@@ -1007,6 +1007,15 @@ font-size:16px;
 #inv-pick-table th:nth-child(5),#inv-pick-table td:nth-child(5){display:table-cell;}
 #inv-pick-table th,#inv-pick-table td{padding:10px 8px;font-size:13px;}
 
+/* ── equipment-table: show Name(2) Rent(3) — hide Quick ID(1) Status(4) Actions(5) ── */
+#equipment-table th:nth-child(1),#equipment-table td:nth-child(1){display:none;}
+#equipment-table th:nth-child(2),#equipment-table td:nth-child(2){display:table-cell;}
+#equipment-table th:nth-child(3),#equipment-table td:nth-child(3){display:table-cell;}
+
+/* ── client-table: Name(1) Phone(2) visible — Address/Actions use desktop-only ── */
+#client-table th:nth-child(1),#client-table td:nth-child(1){display:table-cell;}
+#client-table th:nth-child(2),#client-table td:nth-child(2){display:table-cell;}
+
 /* ── Revenue cards: 2-column grid on mobile ── */
 .revenue-grid{grid-template-columns:1fr 1fr;}
 
