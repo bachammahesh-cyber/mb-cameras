@@ -344,7 +344,7 @@ transform:translateY(-2px);
 .dash-item-chip{background:#f1f5f9;border-radius:20px;padding:3px 10px;font-size:12px;color:#475569;}
 
 /* Action tiles */
-.dash-tile-invoice,.dash-tile-receive,.dash-tile-vendor{
+.dash-tile-new,.dash-tile-invoice,.dash-tile-receive,.dash-tile-vendor{
   display:flex;flex-direction:column;align-items:center;
   justify-content:center;text-align:center;min-height:90px;gap:8px;
 }
@@ -353,6 +353,7 @@ transform:translateY(-2px);
 
 /* Accent colours */
 .dash-tile-active {border-left:4px solid #0b3f6f;}
+.dash-tile-new    {border-left:4px solid #15803d;}
 .dash-tile-invoice{border-left:4px solid #7c3aed;}
 .dash-tile-receive{border-left:4px solid #0f766e;}
 .dash-tile-vendor {border-left:4px solid #b45309;}
