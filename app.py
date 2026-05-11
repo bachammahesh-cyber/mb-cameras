@@ -123,8 +123,8 @@ def append_rental_to_sheet(rental_id, customer_name, phone, start_date, end_date
             ", ".join(equipment_names),
             "Active"
         ])
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[Sheets] ERROR: {e}", flush=True)
 
 
 def tenant_demo_data_exists(conn, tenant_id):
