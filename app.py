@@ -577,7 +577,7 @@ def seed_default_users():
 
     defaults = [
         ("maheshbacham", "aA@9440984550", "owner", PRIMARY_TENANT_ID),
-        ("ramesh", "rR@995956023", "manager", PRIMARY_TENANT_ID),
+        ("ramesh", "rR@9959560203", "manager", PRIMARY_TENANT_ID),
         (DEMO_USERNAME, DEMO_PASSWORD, "owner", DEMO_TENANT_ID)
     ]
 
