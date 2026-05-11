@@ -101,6 +101,32 @@ def current_tenant_id():
     return session.get("tenant_id", PRIMARY_TENANT_ID)
 
 
+def append_rental_to_sheet(rental_id, customer_name, phone, start_date, end_date,
+                            total_amount, advance_paid, balance, equipment_names):
+    try:
+        import gspread, json
+        from google.oauth2.service_account import Credentials
+        creds_json = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
+        sheet_id   = os.getenv("GOOGLE_SHEET_ID")
+        if not creds_json or not sheet_id:
+            return
+        creds = Credentials.from_service_account_info(
+            json.loads(creds_json),
+            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+        )
+        gc = gspread.authorize(creds)
+        sheet = gc.open_by_key(sheet_id).sheet1
+        sheet.append_row([
+            rental_id, customer_name, phone,
+            str(start_date), str(end_date),
+            total_amount, advance_paid, balance,
+            ", ".join(equipment_names),
+            "Active"
+        ])
+    except Exception:
+        pass
+
+
 def tenant_demo_data_exists(conn, tenant_id):
     existing_item = conn.execute(
         "SELECT id FROM items WHERE tenant_id=? LIMIT 1",
@@ -1164,6 +1190,7 @@ def save_rental():
         rental_id = conn.execute("SELECT last_insert_rowid() AS id").fetchone()["id"]
 
     total_amount = 0
+    equipment_names = []
 
     item_ids = request.form.getlist("item_ids")
 
@@ -1182,6 +1209,7 @@ def save_rental():
             quantity = 1
 
         item_total = days * item["rent_per_day"] * quantity
+        equipment_names.append(item["name"])
 
         total_amount += item_total
 
@@ -1277,6 +1305,11 @@ def save_rental():
 
     conn.commit()
     conn.close()
+
+    append_rental_to_sheet(
+        rental_id, customer_name, phone, start_date, end_date,
+        total_amount, advance_paid, balance, equipment_names
+    )
 
     return redirect("/dashboard")
 

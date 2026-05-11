@@ -2,3 +2,5 @@ Flask
 gunicorn
 Werkzeug
 psycopg[binary]
+gspread
+google-auth
