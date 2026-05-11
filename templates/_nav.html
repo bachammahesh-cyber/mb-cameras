@@ -1,15 +1,15 @@
 <nav class="bottom-nav">
-  <a href="/dashboard" class="nav-item{% if request.path == '/dashboard' %} nav-active{% endif %}">
-    <span class="nav-icon">⊞</span>
-    <span class="nav-label">Home</span>
+  <a href="/inventory" class="nav-item{% if request.path == '/inventory' or request.path.startswith('/edit_item') or request.path.startswith('/edit_client') %} nav-active{% endif %}">
+    <span class="nav-icon">◧</span>
+    <span class="nav-label">Inventory</span>
   </a>
   <a href="/rental_records" class="nav-item{% if request.path.startswith('/rental_records') or request.path.startswith('/edit_rental') %} nav-active{% endif %}">
     <span class="nav-icon">☰</span>
     <span class="nav-label">Records</span>
   </a>
-  <a href="/inventory" class="nav-item{% if request.path == '/inventory' or request.path.startswith('/edit_item') or request.path.startswith('/edit_client') %} nav-active{% endif %}">
-    <span class="nav-icon">◧</span>
-    <span class="nav-label">Inventory</span>
+  <a href="/dashboard" class="nav-item{% if request.path == '/dashboard' %} nav-active{% endif %}">
+    <span class="nav-icon">⊞</span>
+    <span class="nav-label">Home</span>
   </a>
   <a href="/credit_report" class="nav-item{% if request.path == '/credit_report' or request.path == '/vendor_dues' %} nav-active{% endif %}">
     <span class="nav-icon">₹</span>
