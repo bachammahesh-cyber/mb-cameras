@@ -65,9 +65,43 @@
 
 </div>
 
+<div class="bokeh-container" id="bokeh"></div>
+
 </div>
 
 {% include "_nav.html" %}
+
+<script>
+(function(){
+  const container = document.getElementById('bokeh');
+  const colors = [
+    'rgba(59,130,246,',
+    'rgba(96,165,250,',
+    'rgba(147,197,253,',
+    'rgba(30,64,175,',
+    'rgba(191,219,254,',
+    'rgba(255,255,255,'
+  ];
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement('div');
+    el.className = 'bokeh-circle';
+    const size    = 18 + Math.random() * 70;
+    const color   = colors[Math.floor(Math.random() * colors.length)];
+    const opacity = 0.08 + Math.random() * 0.22;
+    const dur     = 7 + Math.random() * 11;
+    const delay   = -(Math.random() * 18);
+    const left    = Math.random() * 100;
+    const blur    = 5 + Math.random() * 14;
+    el.style.cssText =
+      `width:${size}px;height:${size}px;left:${left}%;` +
+      `background:${color}${opacity.toFixed(2)});` +
+      `filter:blur(${blur.toFixed(1)}px);` +
+      `animation-duration:${dur.toFixed(1)}s;` +
+      `animation-delay:${delay.toFixed(1)}s;`;
+    container.appendChild(el);
+  }
+})();
+</script>
 
 </body>
 </html>
