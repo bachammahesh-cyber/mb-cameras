@@ -105,6 +105,7 @@ display:contents;
 .brand-band .brand-title::before{
 content:"";
 display:block;
+order:2;
 width:70%;
 height:1px;
 background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
@@ -113,6 +114,7 @@ background:linear-gradient(90deg,transparent,rgba(255,255,255,0.4),transparent);
 .brand-band .brand-title::after{
 content:"· Camera Rentals ·";
 display:block;
+order:3;
 font-size:11px;
 font-weight:500;
 letter-spacing:0.55em;
