@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@900&display=swap');
 
 /* ------------------------
 GENERAL
@@ -55,8 +55,11 @@ BRAND BAND
 
 .brand-band{
 position:relative;
+display:flex;
+align-items:center;
 justify-content:center;
-padding:22px 30px;
+min-height:80px;
+padding:20px 30px;
 background:linear-gradient(120deg,#0f172a 0%,#0b3f6f 45%,#0f766e 100%);
 border-bottom:none;
 box-shadow:0 8px 24px rgba(2,12,27,0.25);
@@ -77,12 +80,15 @@ position:relative;
 z-index:1;
 display:inline-block;
 font-size:48px;
-font-family:"Cinzel",Georgia,serif;
-font-weight:700;
-letter-spacing:0.12em;
+font-family:"Poppins",sans-serif;
+font-weight:900;
+letter-spacing:0.08em;
 color:#f8fafc;
 text-transform:uppercase;
-text-shadow:0 4px 18px rgba(0,0,0,0.45),0 1px 0 rgba(255,255,255,0.15);
+text-shadow:
+  -10px 0 28px rgba(212,175,55,0.45),
+  -4px 0 10px rgba(212,175,55,0.2),
+  0 4px 18px rgba(0,0,0,0.4);
 -webkit-text-stroke:0px;
 }
 
@@ -798,9 +804,12 @@ padding:14px 16px;
 padding:16px 14px;
 }
 
+.brand-band{
+min-height:64px;
+}
 .brand-band .brand-title{
-font-size:34px;
-letter-spacing:0.1em;
+font-size:32px;
+letter-spacing:0.06em;
 }
 
 .brand-band .header-action{
@@ -1021,10 +1030,9 @@ padding-bottom:52px;
 }
 
 .brand-band .brand-title{
-font-size:28px;
-font-weight:700;
-letter-spacing:0.08em;
-width:100%;
+font-size:26px;
+font-weight:900;
+letter-spacing:0.05em;
 text-align:center;
 }
 
