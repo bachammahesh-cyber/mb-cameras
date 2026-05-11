@@ -56,6 +56,7 @@ BRAND BAND
 
 .brand-band{
 position:relative;
+z-index:2;
 display:flex;
 align-items:center;
 justify-content:center;
@@ -229,6 +230,8 @@ max-width:1100px;
 margin:auto;
 padding:30px;
 box-sizing:border-box;
+position:relative;
+z-index:1;
 }
 
 /* ------------------------
@@ -349,12 +352,13 @@ transform:translateY(-2px);
 
 /* Bokeh */
 .bokeh-container{
-  position:relative;
-  height:200px;
-  margin-top:20px;
-  border-radius:16px;
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
   overflow:hidden;
-  background:linear-gradient(160deg,#0f172a 0%,#0b3f6f 60%,#0f172a 100%);
 }
 .bokeh-circle{
   position:absolute;
