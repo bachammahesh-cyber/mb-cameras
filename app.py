@@ -551,7 +551,7 @@ def seed_default_users():
 
     defaults = [
         ("maheshbacham", "aA@9440984550", "owner", PRIMARY_TENANT_ID),
-        ("gopi", "9515369042", "manager", PRIMARY_TENANT_ID),
+        ("ramesh", "rR@995956023", "manager", PRIMARY_TENANT_ID),
         (DEMO_USERNAME, DEMO_PASSWORD, "owner", DEMO_TENANT_ID)
     ]
 
@@ -680,11 +680,21 @@ def seed_demo_data():
         conn.close()
 
 
+def remove_user(username):
+    conn = get_db()
+    try:
+        conn.execute("DELETE FROM users WHERE LOWER(TRIM(username))=?", (username.strip().lower(),))
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def ensure_db_ready():
     global DB_READY
     if DB_READY:
         return
     init_db()
+    remove_user("gopi")
     seed_default_users()
     seed_demo_data()
     DB_READY = True
