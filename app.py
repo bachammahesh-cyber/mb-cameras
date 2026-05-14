@@ -1208,7 +1208,15 @@ def save_rental():
         except (ValueError, TypeError):
             quantity = 1
 
-        item_total = days * item["rent_per_day"] * quantity
+        rate_text = request.form.get(f"item_rates[{item_id}]", "").strip()
+        try:
+            rate_per_day = float(rate_text) if rate_text else item["rent_per_day"]
+        except ValueError:
+            rate_per_day = item["rent_per_day"]
+        if rate_per_day <= 0:
+            rate_per_day = item["rent_per_day"]
+
+        item_total = days * rate_per_day * quantity
         equipment_names.append(item["name"])
 
         total_amount += item_total
@@ -1221,7 +1229,7 @@ def save_rental():
             tenant_id,
             rental_id,
             item_id,
-            item["rent_per_day"],
+            rate_per_day,
             days,
             item_total,
             "Active",
